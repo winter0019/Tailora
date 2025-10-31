@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import type { CustomerDetails, StyleSuggestion, StylePreferences } from '../types';
 
@@ -5,9 +6,11 @@ let ai: GoogleGenAI | null = null;
 
 function getAiClient(): GoogleGenAI {
   if (!ai) {
+    // The API key is now injected directly into the bundle at build time.
+    // If it's undefined, it means the build environment was not configured correctly.
     const API_KEY = process.env.GEMINI_API_KEY;
     if (!API_KEY) {
-      throw new Error("GEMINI_API_KEY environment variable is not set. Please configure it in your deployment settings.");
+      throw new Error("GEMINI_API_KEY was not provided at build time. Please configure it in your deployment settings.");
     }
     ai = new GoogleGenAI({ apiKey: API_KEY });
   }
