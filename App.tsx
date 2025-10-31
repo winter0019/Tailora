@@ -2,11 +2,12 @@ import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { ImageUploader } from './components/ImageUploader';
 import { CustomerForm } from './components/CustomerForm';
+import { StylePreferences } from './components/StylePreferences';
 import { StyleSuggestions } from './components/StyleSuggestions';
 import { Loader } from './components/Loader';
 import { SparklesIcon } from './components/icons/SparklesIcon';
 import { generateStyle } from './services/geminiService';
-import type { CustomerDetails, StyleSuggestion } from './types';
+import type { CustomerDetails, StyleSuggestion, StylePreferences as StylePreferencesType } from './types';
 
 const App: React.FC = () => {
   const [fabricImage, setFabricImage] = useState<File | null>(null);
@@ -16,6 +17,10 @@ const App: React.FC = () => {
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
     bodySize: '',
     bodyNature: '',
+  });
+  const [stylePreferences, setStylePreferences] = useState<StylePreferencesType>({
+    inspirations: [],
+    garmentType: 'Any',
   });
   const [suggestions, setSuggestions] = useState<StyleSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -44,6 +49,10 @@ const App: React.FC = () => {
     setCustomerDetails(prev => ({ ...prev, [name]: value }));
   };
 
+  const handlePreferencesChange = (newPreferences: StylePreferencesType) => {
+    setStylePreferences(newPreferences);
+  };
+
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -57,8 +66,8 @@ const App: React.FC = () => {
   };
 
   const handleSubmit = useCallback(async () => {
-    if (!fabricImage || !customerImage || !customerDetails.bodySize || !customerDetails.bodyNature) {
-      setError('Please upload a fabric image, a customer photo, and fill in all customer details.');
+    if (!fabricImage || !customerImage || !customerDetails.bodySize || !customerDetails.bodyNature || stylePreferences.inspirations.length === 0) {
+      setError('Please fill out all fields: fabric image, customer photo, customer details, and at least one cultural inspiration.');
       return;
     }
 
@@ -71,7 +80,7 @@ const App: React.FC = () => {
       const customerImageBase64 = await fileToBase64(customerImage);
       
       const generationPromises = Array.from({ length: numStyles }, () => 
-        generateStyle(fabricImageBase64, fabricImage.type, customerImageBase64, customerImage.type, customerDetails)
+        generateStyle(fabricImageBase64, fabricImage.type, customerImageBase64, customerImage.type, customerDetails, stylePreferences)
       );
 
       const generated = await Promise.all(generationPromises);
@@ -82,9 +91,9 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fabricImage, customerImage, customerDetails, numStyles]);
+  }, [fabricImage, customerImage, customerDetails, numStyles, stylePreferences]);
   
-  const isButtonDisabled = !fabricImage || !customerImage || !customerDetails.bodySize || !customerDetails.bodyNature || isLoading;
+  const isButtonDisabled = !fabricImage || !customerImage || !customerDetails.bodySize || !customerDetails.bodyNature || stylePreferences.inspirations.length === 0 || isLoading;
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
@@ -95,23 +104,33 @@ const App: React.FC = () => {
             <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">Unlock unique, creatively designed fashion by fusing Nigerian fabrics with global styles.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                <h2 className="text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">1. Upload Fabric</h2>
-                <ImageUploader 
-                  onImageChange={handleFabricImageChange} 
-                  imagePreviewUrl={fabricImagePreview} 
-                  promptText="Click to upload fabric or drag and drop"
-                  subText="PNG, JPG, etc."
-                />
+        <div className="space-y-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+                    <h2 className="text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">1. Upload Fabric</h2>
+                    <ImageUploader 
+                      onImageChange={handleFabricImageChange} 
+                      imagePreviewUrl={fabricImagePreview} 
+                      promptText="Click to upload fabric or drag and drop"
+                      subText="PNG, JPG, etc."
+                    />
+                </div>
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+                    <h2 className="text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">2. Customer Details</h2>
+                    <CustomerForm 
+                        details={customerDetails} 
+                        onDetailsChange={handleDetailsChange}
+                        onCustomerImageChange={handleCustomerImageChange}
+                        customerImagePreviewUrl={customerImagePreview}
+                    />
+                </div>
             </div>
+
             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                <h2 className="text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">2. Customer Details</h2>
-                <CustomerForm 
-                    details={customerDetails} 
-                    onDetailsChange={handleDetailsChange}
-                    onCustomerImageChange={handleCustomerImageChange}
-                    customerImagePreviewUrl={customerImagePreview}
+                <h2 className="text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">3. Style Preferences</h2>
+                <StylePreferences 
+                    preferences={stylePreferences}
+                    onPreferencesChange={handlePreferencesChange}
                 />
             </div>
         </div>

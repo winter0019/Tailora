@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import type { CustomerDetails, StyleSuggestion } from '../types';
+import type { CustomerDetails, StyleSuggestion, StylePreferences } from '../types';
 
 const API_KEY = process.env.API_KEY;
 if (!API_KEY) {
@@ -15,20 +15,35 @@ export const generateStyle = async (
   fabricMimeType: string,
   customerImageBase64: string,
   customerMimeType: string,
-  customerDetails: CustomerDetails
+  customerDetails: CustomerDetails,
+  stylePreferences: StylePreferences
 ): Promise<StyleSuggestion | null> => {
+  const garmentTypeInstruction = stylePreferences.garmentType === 'Any'
+    ? "The output can be a **long gown, a short dress, a skirt and top set, or trousers and a blouse.**"
+    : `The output **must be a ${stylePreferences.garmentType}.**`;
+    
+  const inspirationPool = {
+    "Nigerian": "Ankara prints, Aso-Oke weaving, Adire patterns, Buba/Iro styles, Agbada embroidery.",
+    "Middle Eastern": "Abaya silhouettes, Kaftan elegance, intricate embroidery.",
+    "East Asian": "Chinese Qipao collars, Japanese Kimono sleeves, Korean Hanbok layering.",
+    "European": "Victorian-era corsetry/ruffles, sleek English tailoring, French haute couture draping.",
+    "South Asian": "Saree draping, Lehenga skirts, intricate Zari work."
+  };
+  
+  const selectedInspirations = ["Nigerian", ...stylePreferences.inspirations];
+  const inspirationText = selectedInspirations
+      .map(key => `*   **${key}:** ${inspirationPool[key as keyof typeof inspirationPool]}`)
+      .join('\n');
+
   // Simplified prompt, relying on API config for output structure.
   const prompt = `You are 'Tailora', a world-renowned creative partner for fashion designers, specializing in **cultural fusion design**. Your talent lies in blending traditional styles from different parts of the world to create stunning, unique, and modern garments.
 
 **Your Task:**
-Invent a novel fashion style by fusing elements from **at least two different cultural styles**, one of which must be traditional Nigerian fashion. The output can be a **long gown, a short dress, a skirt and top set, or trousers and a blouse.**
+Invent a novel fashion style by fusing elements from the following cultural styles: **Nigerian fashion and ${stylePreferences.inspirations.join(' & ')} fashion**.
+${garmentTypeInstruction}
 
-**Inspiration Pool (select from these at random):**
-*   **Nigerian:** Ankara prints, Aso-Oke weaving, Adire patterns, Buba/Iro styles, Agbada embroidery.
-*   **Middle Eastern:** Abaya silhouettes, Kaftan elegance, intricate embroidery.
-*   **East Asian:** Chinese Qipao collars, Japanese Kimono sleeves, Korean Hanbok layering.
-*   **European:** Victorian-era corsetry/ruffles, sleek English tailoring, French haute couture draping.
-*   **South Asian:** Saree draping, Lehenga skirts, intricate Zari work.
+**Inspiration Pool (You must use elements from these selected styles):**
+${inspirationText}
 
 **Inputs:**
 1.  **Fabric Image:** The provided Nigerian fabric. This must be the centerpiece of the design.
@@ -38,12 +53,10 @@ Invent a novel fashion style by fusing elements from **at least two different cu
     *   Body Nature/Type: ${customerDetails.bodyNature}
 
 **Instructions:**
-1.  **Randomly select a Nigerian style element and at least one element from another cultural pool.**
-2.  **Vary the garment type and length.** Create a mix of long dresses, short dresses, two-piece outfits, and jumpsuits.
-3.  **Combine them creatively.** (e.g., an Ankara print short dress with Kimono sleeves).
-4.  Give the style a creative, descriptive name that reflects its fused nature.
-5.  **Crucially, every style you generate must be a fresh and random combination.**
-6.  Based on your design, provide the style details and generate a professional fashion sketch. The sketch should be on a model with a complexion similar to the customer's, clearly showing the fabric's design.`;
+1.  **Combine elements creatively** from the selected cultural pools.
+2.  Give the style a creative, descriptive name that reflects its fused nature.
+3.  **Crucially, every style you generate must be a fresh and random combination within the given constraints.**
+4.  Based on your design, provide the style details and generate a professional fashion sketch. The sketch should be on a model with a complexion similar to the customer's, clearly showing the fabric's design.`;
 
   const fabricImagePart = {
     inlineData: { data: fabricImageBase64, mimeType: fabricMimeType },

@@ -9,3 +9,8 @@ export interface StyleSuggestion {
   occasions: string;
   sketchUrl: string;
 }
+
+export interface StylePreferences {
+    inspirations: string[];
+    garmentType: string;
+}
