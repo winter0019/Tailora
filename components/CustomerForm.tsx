@@ -21,6 +21,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ details, onDetailsCh
             imagePreviewUrl={customerImagePreviewUrl} 
             promptText="Click to upload a photo"
             subText="Helps with color matching"
+            capture="user"
         />
       </div>
       <div>

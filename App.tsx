@@ -113,6 +113,7 @@ const App: React.FC = () => {
                       imagePreviewUrl={fabricImagePreview} 
                       promptText="Click to upload fabric or drag and drop"
                       subText="PNG, JPG, etc."
+                      capture="environment"
                     />
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
