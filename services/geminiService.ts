@@ -68,7 +68,9 @@ ${inspirationText}
 1.  **Combine elements creatively** from the selected cultural pools.
 2.  Give the style a creative, descriptive name that reflects its fused nature.
 3.  **Crucially, every style you generate must be a fresh and random combination within the given constraints.**
-4.  Based on your design, provide the style details and generate a professional fashion sketch. The sketch should be on a model with a complexion similar to the customer's, clearly showing the fabric's design.`;
+4.  Based on your design, provide the style details and generate a professional fashion sketch. The sketch should be on a model with a complexion similar to the customer's, clearly showing the fabric's design.
+
+**Output Format:** Your text response MUST be a single, valid JSON object containing three keys: "styleName", "description", and "occasions". Do not include any other text or markdown formatting like \`\`\`json.`;
 
   const fabricImagePart = {
     inlineData: { data: fabricImageBase64, mimeType: fabricMimeType },
@@ -86,16 +88,6 @@ ${inspirationText}
         temperature: 0.9,
         topP: 0.95,
         responseModalities: [Modality.IMAGE],
-        // Use response schema for reliable JSON output in the text part
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            styleName: { type: Type.STRING, description: "A creative, descriptive name that reflects the style's fused nature (e.g., 'Ankara-Kimono Fusion Jumpsuit')." },
-            description: { type: Type.STRING, description: "A detailed description of the style, highlighting the fused cultural elements." },
-            occasions: { type: Type.STRING, description: "A list of suitable occasions for wearing this outfit (e.g., 'Weddings, formal events, evening parties')." },
-          },
-          required: ["styleName", "description", "occasions"],
-        },
       }
     });
     
@@ -106,7 +98,9 @@ ${inspirationText}
     const jsonText = response.text;
     if (jsonText) {
       try {
-        styleDetails = JSON.parse(jsonText);
+        // Clean the text: remove markdown backticks and trim whitespace
+        const cleanedJsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+        styleDetails = JSON.parse(cleanedJsonText);
       } catch (e) {
         console.warn("Invalid JSON received from API:", jsonText, e);
       }

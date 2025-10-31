@@ -45,7 +45,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, ima
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        className="mt-1 flex flex-col justify-center items-center p-4 border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-md hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors duration-200 min-h-[150px] aspect-video"
+        className="mt-1 flex flex-col justify-center items-center p-4 border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-md hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors duration-200 min-h-[150px] aspect-square sm:aspect-video"
       >
         <div className="space-y-1 text-center">
           {imagePreviewUrl ? (
@@ -54,10 +54,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, ima
             <div className="flex flex-col items-center justify-center h-full">
               <div onClick={handleFileAreaClick} className="cursor-pointer p-4" aria-label={promptText}>
                 <CameraIcon />
-                <div className="flex text-sm text-slate-600 dark:text-slate-400">
+                <div className="flex text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                   <p className="pl-1">{promptText}</p>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-500">{subText}</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-500">{subText}</p>
               </div>
               
               {capture && (

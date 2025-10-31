@@ -105,16 +105,16 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col font-sans">
       <Header />
-      <main className="flex-grow container mx-auto p-4 md:p-6 lg:p-8 space-y-8 pb-40">
+      <main className="flex-grow container mx-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-8 pb-32">
         <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">Your Creative Style Assistant</h1>
-            <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">Unlock unique, creatively designed fashion by fusing Nigerian fabrics with global styles.</p>
+            <p className="mt-2 text-base md:text-lg text-slate-600 dark:text-slate-400">Unlock unique, creatively designed fashion by fusing Nigerian fabrics with global styles.</p>
         </div>
 
         <div className="space-y-8 max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                    <h2 className="text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">1. Upload Fabric</h2>
+                <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+                    <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">1. Upload Fabric</h2>
                     <ImageUploader 
                       onImageChange={handleFabricImageChange} 
                       imagePreviewUrl={fabricImagePreview} 
@@ -123,8 +123,8 @@ const App: React.FC = () => {
                       capture="environment"
                     />
                 </div>
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                    <h2 className="text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">2. Customer Details</h2>
+                <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+                    <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">2. Customer Details</h2>
                     <CustomerForm 
                         details={customerDetails} 
                         onDetailsChange={handleDetailsChange}
@@ -134,8 +134,8 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                <h2 className="text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">3. Style Preferences</h2>
+            <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+                <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">3. Style Preferences</h2>
                 <StylePreferences 
                     preferences={stylePreferences}
                     onPreferencesChange={handlePreferencesChange}
@@ -156,12 +156,12 @@ const App: React.FC = () => {
 
       </main>
       
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700 p-4">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700 p-3 sm:p-4">
           <div className="container mx-auto max-w-6xl flex flex-col items-center gap-4">
               <button
                   onClick={handleSubmit}
                   disabled={isButtonDisabled}
-                  className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-indigo-600 text-white font-bold text-lg rounded-full shadow-lg hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-300 ease-in-out disabled:transform-none"
+                  className="w-full md:w-auto flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-indigo-600 text-white font-bold text-base sm:text-lg rounded-full shadow-lg hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-300 ease-in-out disabled:transform-none"
                   aria-label={isLoading ? 'Generating style...' : suggestions.length > 0 ? 'Generate Another Style Idea' : 'Generate Style Idea'}
               >
                   <SparklesIcon />

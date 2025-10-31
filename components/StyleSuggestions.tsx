@@ -8,7 +8,7 @@ interface StyleSuggestionsProps {
 export const StyleSuggestions: React.FC<StyleSuggestionsProps> = ({ suggestions }) => {
   return (
     <div className="max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold text-center mb-8 text-slate-900 dark:text-white">Your Style Suggestions</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-slate-900 dark:text-white">Your Style Suggestions</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {suggestions.map((suggestion, index) => (
           <div 
