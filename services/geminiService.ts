@@ -1,12 +1,19 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import type { CustomerDetails, StyleSuggestion, StylePreferences } from '../types';
 
-const API_KEY = process.env.API_KEY;
-if (!API_KEY) {
-    throw new Error("API_KEY environment variable is not set");
+let ai: GoogleGenAI | null = null;
+
+function getAiClient(): GoogleGenAI {
+  if (!ai) {
+    const API_KEY = process.env.GEMINI_API_KEY;
+    if (!API_KEY) {
+      throw new Error("GEMINI_API_KEY environment variable is not set. Please configure it in your deployment settings.");
+    }
+    ai = new GoogleGenAI({ apiKey: API_KEY });
+  }
+  return ai;
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 // This function now generates one style at a time to ensure higher quality and easier parsing.
 // It will be called multiple times in parallel from the frontend.
@@ -18,6 +25,8 @@ export const generateStyle = async (
   customerDetails: CustomerDetails,
   stylePreferences: StylePreferences
 ): Promise<StyleSuggestion | null> => {
+  const client = getAiClient();
+
   const garmentTypeInstruction = stylePreferences.garmentType === 'Any'
     ? "The output can be a **long gown, a short dress, a skirt and top set, or trousers and a blouse.**"
     : `The output **must be a ${stylePreferences.garmentType}.**`;
@@ -67,7 +76,7 @@ ${inspirationText}
   const textPart = { text: prompt };
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: { parts: [fabricImagePart, customerImagePart, textPart] },
       config: {
