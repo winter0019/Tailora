@@ -25,7 +25,6 @@ const App: React.FC = () => {
   const [suggestions, setSuggestions] = useState<StyleSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [numStyles, setNumStyles] = useState<number>(3); // State for number of styles
 
   const handleImageChange = (setter: (file: File | null) => void, previewSetter: (url: string | null) => void) => (file: File | null) => {
     setter(file);
@@ -73,35 +72,33 @@ const App: React.FC = () => {
 
     setError(null);
     setIsLoading(true);
-    setSuggestions([]);
-
+    
     try {
       const fabricImageBase64 = await fileToBase64(fabricImage);
       const customerImageBase64 = await fileToBase64(customerImage);
       
-      const newSuggestions: StyleSuggestion[] = [];
-      for (let i = 0; i < numStyles; i++) {
-        const newSuggestion = await generateStyle(
-          fabricImageBase64, 
-          fabricImage.type, 
-          customerImageBase64, 
-          customerImage.type, 
-          customerDetails, 
-          stylePreferences
-        );
-        if (newSuggestion) {
-          newSuggestions.push(newSuggestion);
-          setSuggestions([...newSuggestions]); // Update UI as each suggestion arrives
-        }
+      const newSuggestion = await generateStyle(
+        fabricImageBase64, 
+        fabricImage.type, 
+        customerImageBase64, 
+        customerImage.type, 
+        customerDetails, 
+        stylePreferences
+      );
+      if (newSuggestion) {
+        setSuggestions(prev => [newSuggestion, ...prev]); // Add new suggestion to the top of the list
       }
       
     } catch (err) {
       console.error(err);
-      setError('Failed to generate styles. Our creative engine may be experiencing high demand. Please try again later.');
+      const errorMessage = err instanceof Error && err.message.includes("quota")
+        ? "You've exceeded the free usage limit for today. Please try again tomorrow."
+        : "Failed to generate a style. Our creative engine may be busy. Please try again.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [fabricImage, customerImage, customerDetails, numStyles, stylePreferences]);
+  }, [fabricImage, customerImage, customerDetails, stylePreferences]);
   
   const isButtonDisabled = !fabricImage || !customerImage || !customerDetails.bodySize || !customerDetails.bodyNature || stylePreferences.inspirations.length === 0 || isLoading;
 
@@ -161,33 +158,14 @@ const App: React.FC = () => {
       
       <footer className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700 p-4">
           <div className="container mx-auto max-w-6xl flex flex-col items-center gap-4">
-              <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Style Variety:</span>
-                  <div className="flex items-center gap-1 rounded-full bg-slate-200 dark:bg-slate-800 p-1">
-                      {[3, 5, 7].map((count) => (
-                          <button
-                              key={count}
-                              onClick={() => setNumStyles(count)}
-                              className={`px-4 py-1 rounded-full text-sm font-semibold transition-colors duration-200 ${
-                                  numStyles === count
-                                  ? 'bg-indigo-600 text-white shadow'
-                                  : 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700'
-                              }`}
-                              aria-pressed={numStyles === count}
-                          >
-                              {count}
-                          </button>
-                      ))}
-                  </div>
-              </div>
               <button
                   onClick={handleSubmit}
                   disabled={isButtonDisabled}
                   className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-indigo-600 text-white font-bold text-lg rounded-full shadow-lg hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-300 ease-in-out disabled:transform-none"
-                  aria-label={isLoading ? 'Generating styles' : `Generate ${numStyles} style ideas`}
+                  aria-label={isLoading ? 'Generating style...' : suggestions.length > 0 ? 'Generate Another Style Idea' : 'Generate Style Idea'}
               >
                   <SparklesIcon />
-                  {isLoading ? 'Generating...' : `Generate ${numStyles} Style Ideas`}
+                  {isLoading ? 'Generating...' : suggestions.length > 0 ? 'Generate Another Style' : 'Generate Style Idea'}
               </button>
           </div>
       </footer>
