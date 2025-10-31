@@ -1,0 +1,11 @@
+services:
+  - type: static_site
+    name: naija-tailor-style-ai
+    env: static
+    # No build command is necessary as this is a static project
+    # that uses CDN imports.
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
