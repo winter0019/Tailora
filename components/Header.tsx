@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const Header: React.FC = () => {
@@ -8,9 +7,9 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
              <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                N
+                T
              </div>
-            <span className="text-xl font-bold text-slate-800 dark:text-white">Naija Tailor Style AI</span>
+            <span className="text-xl font-bold text-slate-800 dark:text-white">Tailora</span>
           </div>
         </div>
       </div>

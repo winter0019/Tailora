@@ -18,7 +18,7 @@ export const generateStyle = async (
   customerDetails: CustomerDetails
 ): Promise<StyleSuggestion | null> => {
   // Simplified prompt, relying on API config for output structure.
-  const prompt = `You are a world-renowned, avant-garde fashion AI specializing in **cultural fusion design**. Your talent lies in blending traditional styles from different parts of the world to create stunning, unique, and modern garments.
+  const prompt = `You are 'Tailora', a world-renowned creative partner for fashion designers, specializing in **cultural fusion design**. Your talent lies in blending traditional styles from different parts of the world to create stunning, unique, and modern garments.
 
 **Your Task:**
 Invent a novel fashion style by fusing elements from **at least two different cultural styles**, one of which must be traditional Nigerian fashion. The output can be a **long gown, a short dress, a skirt and top set, or trousers and a blouse.**

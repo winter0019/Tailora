@@ -1,6 +1,6 @@
 services:
   - type: static_site
-    name: naija-tailor-style-ai
+    name: tailora
     env: static
     # No build command is necessary as this is a static project
     # that uses CDN imports.

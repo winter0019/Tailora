@@ -78,7 +78,7 @@ const App: React.FC = () => {
       setSuggestions(generated.filter(s => s !== null) as StyleSuggestion[]);
     } catch (err) {
       console.error(err);
-      setError('Failed to generate styles. The AI may be experiencing high demand. Please try again later.');
+      setError('Failed to generate styles. Our creative engine may be experiencing high demand. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -91,8 +91,8 @@ const App: React.FC = () => {
       <Header />
       <main className="flex-grow container mx-auto p-4 md:p-6 lg:p-8 space-y-8 pb-40">
         <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">AI-Powered Style Assistant</h1>
-            <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">Unlock unique, AI-generated fashion by fusing Nigerian fabrics with global styles.</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">Your Creative Style Assistant</h1>
+            <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">Unlock unique, creatively designed fashion by fusing Nigerian fabrics with global styles.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
