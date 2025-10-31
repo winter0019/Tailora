@@ -79,12 +79,22 @@ const App: React.FC = () => {
       const fabricImageBase64 = await fileToBase64(fabricImage);
       const customerImageBase64 = await fileToBase64(customerImage);
       
-      const generationPromises = Array.from({ length: numStyles }, () => 
-        generateStyle(fabricImageBase64, fabricImage.type, customerImageBase64, customerImage.type, customerDetails, stylePreferences)
-      );
-
-      const generated = await Promise.all(generationPromises);
-      setSuggestions(generated.filter(s => s !== null) as StyleSuggestion[]);
+      const newSuggestions: StyleSuggestion[] = [];
+      for (let i = 0; i < numStyles; i++) {
+        const newSuggestion = await generateStyle(
+          fabricImageBase64, 
+          fabricImage.type, 
+          customerImageBase64, 
+          customerImage.type, 
+          customerDetails, 
+          stylePreferences
+        );
+        if (newSuggestion) {
+          newSuggestions.push(newSuggestion);
+          setSuggestions([...newSuggestions]); // Update UI as each suggestion arrives
+        }
+      }
+      
     } catch (err) {
       console.error(err);
       setError('Failed to generate styles. Our creative engine may be experiencing high demand. Please try again later.');
