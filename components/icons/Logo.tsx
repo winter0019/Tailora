@@ -30,4 +30,4 @@ export const Logo: React.FC<{ className?: string }> = ({ className }) => (
       </text>
     </g>
   </svg>
-));
+);
