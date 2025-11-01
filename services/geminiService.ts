@@ -59,10 +59,11 @@ ${inspirationText}
     *   Body Nature/Type: ${customerDetails.bodyNature}
 
 **Instructions:**
-1.  **Combine elements creatively** from the selected cultural pools.
-2.  Give the style a creative, descriptive name that reflects its fused nature.
-3.  **Crucially, every style you generate must be a fresh and random combination within the given constraints.**
-4.  Describe the final design in detail. This description will be used to generate a sketch, so be specific about the silhouette, cut, details, and how the fabric is used.
+1.  **Branding Mandate:** Every design must subtly incorporate an element inspired by the Tailora brand logo, which is a stylized letter 'B' that also represents a needle and thread. This could be through an embroidery pattern on the cuff, a unique clasp design, a fabric print detail, or a distinctive cut. **You must mention how the logo is incorporated in your description.**
+2.  **Combine elements creatively** from the selected cultural pools.
+3.  Give the style a creative, descriptive name that reflects its fused nature.
+4.  **Crucially, every style you generate must be a fresh and random combination within the given constraints.**
+5.  Describe the final design in detail. This description will be used to generate a sketch, so be specific about the silhouette, cut, details, and how the fabric is used.
 
 **Output Format:** Your response MUST be a single, valid JSON object with the specified schema.`;
 
@@ -79,7 +80,7 @@ ${inspirationText}
           type: Type.OBJECT,
           properties: {
             styleName: { type: Type.STRING, description: "A creative, descriptive name for the fused style." },
-            description: { type: Type.STRING, description: "A detailed description of the garment, including silhouette, cut, and how the fabric is used. This will be used to generate a sketch." },
+            description: { type: Type.STRING, description: "A detailed description of the garment, including silhouette, cut, how the fabric is used, and how the Tailora brand logo is incorporated. This will be used to generate a sketch." },
             occasions: { type: Type.STRING, description: "Suitable occasions for wearing this style." },
           },
           required: ["styleName", "description", "occasions"],
@@ -98,6 +99,7 @@ ${inspirationText}
     const imagePrompt = `Generate a professional fashion sketch of a model wearing the outfit described below.
 - The model should have a complexion similar to the one in the customer photo.
 - The outfit in the sketch MUST be made from the provided fabric pattern.
+- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo** (a stylized 'B' representing a needle and thread) and ensure it is visually represented in the sketch.
 
 **Style Description:**
 ${styleDetails.description}`;
@@ -171,9 +173,10 @@ Refine a previous design based on user feedback and provide updated details.
     *   Body Nature/Type: ${customerDetails.bodyNature}
 
 **Instructions:**
-1.  **Modify the previous design's description** according to the user's request. Do not create a completely new design.
-2.  Update the style name to reflect the changes (e.g., "Embroidered [Original Name]").
-3.  Keep the "occasions" suitable for the modified design.
+1.  **Branding Mandate:** Ensure the refined design still subtly incorporates an element inspired by the Tailora brand logo (a stylized 'B' representing a needle and thread).
+2.  **Modify the previous design's description** according to the user's request. Do not create a completely new design.
+3.  Update the style name to reflect the changes (e.g., "Embroidered [Original Name]").
+4.  Keep the "occasions" suitable for the modified design.
 
 **Output Format:** Your response MUST be a single, valid JSON object with the specified schema.`;
 
@@ -190,7 +193,7 @@ Refine a previous design based on user feedback and provide updated details.
           type: Type.OBJECT,
           properties: {
             styleName: { type: Type.STRING, description: "The updated creative name for the refined style." },
-            description: { type: Type.STRING, description: "The updated detailed description of the refined garment. This will be used to generate a new sketch." },
+            description: { type: Type.STRING, description: "The updated detailed description of the refined garment, including the brand element. This will be used to generate a new sketch." },
             occasions: { type: Type.STRING, description: "Suitable occasions for the refined style." },
           },
           required: ["styleName", "description", "occasions"],
@@ -209,6 +212,7 @@ Refine a previous design based on user feedback and provide updated details.
     const imagePrompt = `Generate a new professional fashion sketch of a model wearing the refined outfit described below.
 - The model should have a complexion similar to the one in the customer photo.
 - The outfit in the sketch MUST be made from the provided fabric pattern.
+- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo** (a stylized 'B' representing a needle and thread) and ensure it is visually represented in the sketch.
 
 **Refined Style Description:**
 ${styleDetails.description}`;
