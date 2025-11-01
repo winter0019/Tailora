@@ -24,14 +24,21 @@ const parseApiResponse = (response: GenerateContentResponse): { styleDetails: Om
     let styleDetails = null;
     let sketchUrl = null;
 
-    const jsonText = response.text;
-    if (jsonText) {
-      try {
-        const cleanedJsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-        styleDetails = JSON.parse(cleanedJsonText);
-      } catch (e) {
-        console.warn("Invalid JSON received from API:", jsonText, e);
-      }
+    const text = response.text;
+    if (text) {
+        // Find the first occurrence of a JSON object within the text.
+        // This is more robust than assuming the entire text is JSON, as the model
+        // sometimes includes conversational text before or after the JSON block.
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            try {
+                styleDetails = JSON.parse(jsonMatch[0]);
+            } catch (e) {
+                console.warn("Failed to parse extracted JSON from response:", jsonMatch[0], e);
+            }
+        } else {
+          console.warn("No JSON object found in the response text:", text);
+        }
     }
 
     const parts = response.candidates?.[0]?.content?.parts || [];
@@ -101,9 +108,6 @@ ${inspirationText}
     const response = await client.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: { parts: [fabricImagePart, customerImagePart, textPart] },
-      config: {
-        responseModalities: [Modality.IMAGE],
-      }
     });
     
     const { styleDetails, sketchUrl } = parseApiResponse(response);
@@ -175,9 +179,6 @@ You are refining a previous design based on user feedback.
     const response = await client.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: { parts: [fabricImagePart, customerImagePart, textPart] },
-      config: {
-        responseModalities: [Modality.IMAGE],
-      }
     });
 
     const { styleDetails, sketchUrl } = parseApiResponse(response);
