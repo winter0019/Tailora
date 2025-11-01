@@ -1,17 +1,17 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import type { CustomerDetails, StyleSuggestion, StylePreferences } from '../types';
 
-let ai: GoogleGenAI | null = null;
-
 function getAiClient(): GoogleGenAI {
-  if (!ai) {
-    // The API key is expected to be available as a pre-configured environment variable.
-    if (!process.env.API_KEY) {
-      throw new Error("API_KEY environment variable not set. Please configure it in your deployment settings.");
-    }
-    ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // The API key is expected to be available as a pre-configured environment variable.
+  // A new client is created for each call to ensure the latest key is used,
+  // especially after the user selects one via the `openSelectKey` dialog.
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    // Throw an error with specific keywords that the UI can catch to prompt the user
+    // to select a different key.
+    throw new Error("API key not found. Please select a key to use the application.");
   }
-  return ai;
+  return new GoogleGenAI({ apiKey });
 }
 
 const inspirationPool = {
@@ -123,7 +123,7 @@ ${inspirationText}
 
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-    throw new Error("Failed to generate styles from the API. The API call failed.");
+    throw error;
   }
 };
 
@@ -197,6 +197,6 @@ You are refining a previous design based on user feedback.
 
   } catch (error) {
     console.error("Error calling Gemini API for refinement:", error);
-    throw new Error("Failed to refine the style from the API. The API call failed.");
+    throw error;
   }
 };
