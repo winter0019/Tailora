@@ -1,28 +1,19 @@
 import React from 'react';
 import type { CustomerDetails } from '../types';
-import { ImageUploader } from './ImageUploader';
 
 interface CustomerFormProps {
   details: CustomerDetails;
   onDetailsChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onCustomerImageChange: (file: File | null) => void;
-  customerImagePreviewUrl: string | null;
 }
 
-export const CustomerForm: React.FC<CustomerFormProps> = ({ details, onDetailsChange, onCustomerImageChange, customerImagePreviewUrl }) => {
+export const CustomerForm: React.FC<CustomerFormProps> = ({ details, onDetailsChange }) => {
   return (
-    <form className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <label htmlFor="customerImage" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Customer Photo (for complexion)
-        </label>
-        <ImageUploader 
-            onImageChange={onCustomerImageChange} 
-            imagePreviewUrl={customerImagePreviewUrl} 
-            promptText="Click to upload a photo"
-            subText="Helps with color matching"
-            capture="user"
-        />
+        <h3 className="block text-base font-medium text-slate-700 dark:text-slate-300">
+          Customer Details
+        </h3>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">The more descriptive you are, the better the style suggestions will be!</p>
       </div>
       <div>
         <label htmlFor="bodySize" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -35,7 +26,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ details, onDetailsCh
             id="bodySize"
             value={details.bodySize}
             onChange={onDetailsChange}
-            className="block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             placeholder="e.g., Size 12, Bust: 36, Waist: 30"
           />
         </div>
@@ -51,12 +42,11 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ details, onDetailsCh
             id="bodyNature"
             value={details.bodyNature}
             onChange={onDetailsChange}
-            className="block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             placeholder="e.g., Pear-shaped, Tall, Plus-size"
           />
         </div>
       </div>
-       <p className="text-xs text-slate-500 dark:text-slate-400">The more descriptive you are, the better the style suggestions will be!</p>
-    </form>
+    </div>
   );
 };

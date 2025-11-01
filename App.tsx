@@ -6,7 +6,7 @@ import { StylePreferences } from './components/StylePreferences';
 import { StyleSuggestions } from './components/StyleSuggestions';
 import { Loader } from './components/Loader';
 import { SparklesIcon } from './components/icons/SparklesIcon';
-import { generateStyle } from './services/geminiService';
+import { generateStyle, refineStyle } from './services/geminiService';
 import type { CustomerDetails, StyleSuggestion, StylePreferences as StylePreferencesType } from './types';
 
 const App: React.FC = () => {
@@ -24,6 +24,7 @@ const App: React.FC = () => {
   });
   const [suggestions, setSuggestions] = useState<StyleSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [refiningId, setRefiningId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleImageChange = (setter: (file: File | null) => void, previewSetter: (url: string | null) => void) => (file: File | null) => {
@@ -77,7 +78,7 @@ const App: React.FC = () => {
       const fabricImageBase64 = await fileToBase64(fabricImage);
       const customerImageBase64 = await fileToBase64(customerImage);
       
-      const newSuggestion = await generateStyle(
+      const newSuggestionData = await generateStyle(
         fabricImageBase64, 
         fabricImage.type, 
         customerImageBase64, 
@@ -85,13 +86,19 @@ const App: React.FC = () => {
         customerDetails, 
         stylePreferences
       );
-      if (newSuggestion) {
-        setSuggestions(prev => [newSuggestion, ...prev]); // Add new suggestion to the top of the list
+      if (newSuggestionData) {
+        const newSuggestion: StyleSuggestion = {
+            ...newSuggestionData,
+            id: `style-${Date.now()}`
+        };
+        setSuggestions(prev => [newSuggestion, ...prev]);
       }
       
     } catch (err) {
       console.error(err);
-      const errorMessage = err instanceof Error && err.message.includes("quota")
+      const errorMessage = err instanceof Error && err.message.includes("API key")
+        ? "The API key is missing or invalid. Please check your deployment settings."
+        : err instanceof Error && err.message.includes("quota")
         ? "You've exceeded the free usage limit for today. Please try again tomorrow."
         : "Failed to generate a style. Our creative engine may be busy. Please try again.";
       setError(errorMessage);
@@ -100,6 +107,49 @@ const App: React.FC = () => {
     }
   }, [fabricImage, customerImage, customerDetails, stylePreferences]);
   
+  const handleRefine = useCallback(async (suggestionId: string, refinementPrompt: string) => {
+    const originalSuggestion = suggestions.find(s => s.id === suggestionId);
+    if (!fabricImage || !customerImage || !originalSuggestion) {
+      setError('Cannot refine style. Original images or suggestion data is missing.');
+      return;
+    }
+    
+    setError(null);
+    setRefiningId(suggestionId);
+    
+    try {
+      const fabricImageBase64 = await fileToBase64(fabricImage);
+      const customerImageBase64 = await fileToBase64(customerImage);
+      
+      const refinedSuggestionData = await refineStyle(
+        fabricImageBase64,
+        fabricImage.type,
+        customerImageBase64,
+        customerImage.type,
+        customerDetails,
+        originalSuggestion,
+        refinementPrompt
+      );
+      
+      if (refinedSuggestionData) {
+        const refinedSuggestion: StyleSuggestion = {
+          ...refinedSuggestionData,
+          id: suggestionId, // Keep the same ID
+        };
+        setSuggestions(prev => prev.map(s => s.id === suggestionId ? refinedSuggestion : s));
+      }
+      
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error && err.message.includes("quota")
+        ? "You've exceeded the free usage limit for today. Please try again tomorrow."
+        : "Failed to refine the style. Our creative engine may be busy. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setRefiningId(null);
+    }
+  }, [fabricImage, customerImage, customerDetails, suggestions]);
+
   const isButtonDisabled = !fabricImage || !customerImage || !customerDetails.bodySize || !customerDetails.bodyNature || stylePreferences.inspirations.length === 0 || isLoading;
 
   return (
@@ -111,37 +161,57 @@ const App: React.FC = () => {
             <p className="mt-2 text-base md:text-lg text-slate-600 dark:text-slate-400">Unlock unique, creatively designed fashion by fusing Nigerian fabrics with global styles.</p>
         </div>
 
-        <div className="space-y-8 max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                    <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">1. Upload Fabric</h2>
-                    <ImageUploader 
-                      onImageChange={handleFabricImageChange} 
-                      imagePreviewUrl={fabricImagePreview} 
-                      promptText="Click to upload fabric or drag and drop"
-                      subText="PNG, JPG, etc."
-                      capture="environment"
-                    />
+        <div className="max-w-6xl mx-auto bg-white dark:bg-slate-800 p-4 sm:p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                {/* Left Column: Visual Inputs */}
+                <div className="space-y-6">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-3">1. Add Visuals</h2>
+                    
+                    <div>
+                        <label className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Fabric Photo
+                        </label>
+                        <ImageUploader 
+                          onImageChange={handleFabricImageChange} 
+                          imagePreviewUrl={fabricImagePreview} 
+                          promptText="Upload fabric photo"
+                          subText="PNG, JPG, etc."
+                          capture="environment"
+                        />
+                    </div>
+
+                    <div>
+                         <label className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Customer Photo
+                        </label>
+                        <ImageUploader 
+                            onImageChange={handleCustomerImageChange} 
+                            imagePreviewUrl={customerImagePreview} 
+                            promptText="Upload customer photo"
+                            subText="Helps with color matching"
+                            capture="user"
+                        />
+                    </div>
+
                 </div>
-                <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                    <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">2. Customer Details</h2>
+
+                {/* Right Column: Textual Inputs */}
+                <div className="space-y-8">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-3">2. Define Style</h2>
+
                     <CustomerForm 
                         details={customerDetails} 
                         onDetailsChange={handleDetailsChange}
-                        onCustomerImageChange={handleCustomerImageChange}
-                        customerImagePreviewUrl={customerImagePreview}
+                    />
+
+                    <StylePreferences 
+                        preferences={stylePreferences}
+                        onPreferencesChange={handlePreferencesChange}
                     />
                 </div>
             </div>
-
-            <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
-                <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100">3. Style Preferences</h2>
-                <StylePreferences 
-                    preferences={stylePreferences}
-                    onPreferencesChange={handlePreferencesChange}
-                />
-            </div>
         </div>
+
 
         {error && (
             <div className="max-w-6xl mx-auto bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
@@ -152,7 +222,7 @@ const App: React.FC = () => {
 
         {isLoading && <Loader />}
 
-        {suggestions.length > 0 && <StyleSuggestions suggestions={suggestions} />}
+        {suggestions.length > 0 && <StyleSuggestions suggestions={suggestions} onRefine={handleRefine} refiningId={refiningId} />}
 
       </main>
       

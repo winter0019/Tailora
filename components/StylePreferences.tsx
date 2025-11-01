@@ -35,9 +35,9 @@ export const StylePreferences: React.FC<StylePreferencesProps> = ({ preferences,
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h3 className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+        <h3 className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
           Cultural Inspirations (Select at least one)
         </h3>
         <div className="grid grid-cols-2 gap-4">
@@ -58,7 +58,7 @@ export const StylePreferences: React.FC<StylePreferencesProps> = ({ preferences,
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Nigerian styles are always included.</p>
       </div>
       <div>
-        <h3 className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+        <h3 className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
           Garment Type
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

@@ -4,6 +4,7 @@ export interface CustomerDetails {
 }
 
 export interface StyleSuggestion {
+  id: string;
   styleName: string;
   description: string;
   occasions: string;
