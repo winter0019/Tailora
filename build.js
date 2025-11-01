@@ -12,7 +12,9 @@ esbuild.build({
   jsx: 'automatic',
   define: {
     // JSON.stringify is used to ensure the value is a string literal in the bundle.
-    'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
+    // Default to an empty string if the API_KEY is not set. This allows the build
+    // to succeed, and the application's runtime checks will handle the missing key.
+    'process.env.API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || '')
   },
 }).catch((err) => {
     console.error("Build failed:", err);
