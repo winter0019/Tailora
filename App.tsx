@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { ImageUploader } from './components/ImageUploader';
 import { CustomerForm } from './components/CustomerForm';
@@ -13,28 +13,6 @@ import type { CustomerDetails, StyleSuggestion, StylePreferences as StylePrefere
 // Fix: Removed conflicting global declaration for `window.aistudio`.
 // The type definition is expected to be provided by the execution environment,
 // and this redeclaration caused a conflict.
-
-const ApiKeySelector: React.FC<{ onKeySelected: () => void }> = ({ onKeySelected }) => (
-  <div className="max-w-xl mx-auto text-center bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 mt-16">
-    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Select Your API Key to Begin</h2>
-    <p className="text-slate-600 dark:text-slate-400 mb-6">
-      To generate styles, Tailora requires a Gemini API key. Using your own key ensures you have sufficient quota for your creative work. Please select a key associated with a billing-enabled Google Cloud project to avoid free-tier limitations.
-    </p>
-    <button
-      onClick={onKeySelected}
-      className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-indigo-600 text-white font-bold text-lg rounded-full shadow-lg hover:bg-indigo-700 transform hover:scale-105 transition-all duration-300 ease-in-out"
-    >
-      Select Your API Key
-    </button>
-    <p className="mt-4 text-xs text-slate-500">
-      Need to set up billing?{' '}
-      <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="font-semibold underline hover:text-indigo-500">
-        Learn more here.
-      </a>
-    </p>
-  </div>
-);
-
 
 const App: React.FC = () => {
   const [fabricImage, setFabricImage] = useState<File | null>(null);
@@ -53,28 +31,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [refiningId, setRefiningId] = useState<string | null>(null);
   const [error, setError] = useState<React.ReactNode | null>(null);
-  const [isKeySelected, setIsKeySelected] = useState<boolean>(false);
   
-  useEffect(() => {
-    const checkApiKey = async () => {
-        if (window.aistudio) {
-            const hasKey = await window.aistudio.hasSelectedApiKey();
-            setIsKeySelected(hasKey);
-        }
-    };
-    checkApiKey();
-  }, []);
-
-  const handleSelectKey = async () => {
-    if (window.aistudio) {
-      await window.aistudio.openSelectKey();
-      // Assume selection is successful and let the user proceed.
-      // A failed API call will provide more specific feedback if the key is invalid.
-      setIsKeySelected(true);
-    }
-  };
-
-
   const handleImageChange = (setter: (file: File | null) => void, previewSetter: (url: string | null) => void) => (file: File | null) => {
     setter(file);
     if (file) {
@@ -151,15 +108,15 @@ const App: React.FC = () => {
       if (err instanceof Error && (err.message.includes("quota") || err.message.includes("RESOURCE_EXHAUSTED"))) {
         setError(
           <>
-            You've exceeded your usage limit. Please ensure your selected API key is linked to a billing-enabled project.
+            You've exceeded your usage limit. Please ensure your API key is linked to a billing-enabled project.
             {' '}
             <a href="https://ai.google.dev/gemini-api/docs/rate-limits" target="_blank" rel="noopener noreferrer" className="font-semibold underline hover:text-red-800">
               Learn more.
             </a>
           </>
         );
-      } else if (err instanceof Error && (err.message.includes("API key") || err.message.includes("not found"))) {
-        setError(<>The API key is missing, invalid, or not authorized for this project. Please select a valid key. <button onClick={() => setIsKeySelected(false)} className="font-semibold underline hover:text-red-800">Select a different key</button></>);
+      } else if (err instanceof Error && err.message.includes("API key")) {
+        setError(<>The API key is missing, invalid, or not authorized for this project. Please ensure it is configured correctly.</>);
       } else {
         setError("Failed to generate a style. Our creative engine may be busy. Please try again.");
       }
@@ -246,9 +203,6 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col font-sans">
       <Header />
       <main className="flex-grow container mx-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-8 pb-32">
-        {!isKeySelected ? (
-            <ApiKeySelector onKeySelected={handleSelectKey} />
-        ) : (
         <>
             <div className="text-center">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">Your Creative Style Assistant</h1>
@@ -318,24 +272,21 @@ const App: React.FC = () => {
 
             {suggestions.length > 0 && <StyleSuggestions suggestions={suggestions} onRefine={handleRefine} refiningId={refiningId} />}
         </>
-        )}
       </main>
       
-      {isKeySelected && (
-        <footer className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700 p-3 sm:p-4">
-            <div className="container mx-auto max-w-6xl flex flex-col items-center gap-4">
-                <button
-                    onClick={handleSubmit}
-                    disabled={isButtonDisabled}
-                    className="w-full md:w-auto flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-indigo-600 text-white font-bold text-base sm:text-lg rounded-full shadow-lg hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-300 ease-in-out disabled:transform-none"
-                    aria-label={isLoading ? 'Generating style...' : suggestions.length > 0 ? 'Generate Another Style Idea' : 'Generate Style Idea'}
-                >
-                    <SparklesIcon />
-                    {isLoading ? 'Generating...' : suggestions.length > 0 ? 'Generate Another Style' : 'Generate Style Idea'}
-                </button>
-            </div>
-        </footer>
-      )}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700 p-3 sm:p-4">
+          <div className="container mx-auto max-w-6xl flex flex-col items-center gap-4">
+              <button
+                  onClick={handleSubmit}
+                  disabled={isButtonDisabled}
+                  className="w-full md:w-auto flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-indigo-600 text-white font-bold text-base sm:text-lg rounded-full shadow-lg hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-300 ease-in-out disabled:transform-none"
+                  aria-label={isLoading ? 'Generating style...' : suggestions.length > 0 ? 'Generate Another Style Idea' : 'Generate Style Idea'}
+              >
+                  <SparklesIcon />
+                  {isLoading ? 'Generating...' : suggestions.length > 0 ? 'Generate Another Style' : 'Generate Style Idea'}
+              </button>
+          </div>
+      </footer>
     </div>
   );
 };

@@ -1,15 +1,13 @@
+
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import type { CustomerDetails, StyleSuggestion, StylePreferences } from '../types';
 
 function getAiClient(): GoogleGenAI {
   // The API key is expected to be available as a pre-configured environment variable.
-  // A new client is created for each call to ensure the latest key is used,
-  // especially after the user selects one via the `openSelectKey` dialog.
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    // Throw an error with specific keywords that the UI can catch to prompt the user
-    // to select a different key.
-    throw new Error("API key not found. Please select a key to use the application.");
+    // This error will be caught by the UI and displayed to the user.
+    throw new Error("API key not found. Please ensure it is configured in the environment.");
   }
   return new GoogleGenAI({ apiKey });
 }
