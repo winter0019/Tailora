@@ -45,7 +45,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, ima
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        className="mt-1 flex flex-col justify-center items-center p-4 border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-md hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors duration-200 min-h-[150px] aspect-square sm:aspect-video"
+        className="mt-1 flex flex-col justify-center items-center p-4 border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-md hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors duration-200 min-h-[140px] aspect-video"
       >
         <div className="space-y-1 text-center">
           {imagePreviewUrl ? (
