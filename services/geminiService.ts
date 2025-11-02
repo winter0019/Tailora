@@ -89,7 +89,13 @@ ${inspirationText}
       },
     });
 
-    const styleDetails = JSON.parse(textResponse.text);
+    let jsonText = textResponse.text.trim();
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.substring(7, jsonText.length - 3).trim();
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.substring(3, jsonText.length - 3).trim();
+    }
+    const styleDetails = JSON.parse(jsonText);
 
     if (!styleDetails?.description) {
         console.error("Failed to generate valid style details from text model.", textResponse.text);
@@ -99,8 +105,8 @@ ${inspirationText}
     // Step 2: Generate fashion sketch based on the description
     const imagePrompt = `Generate a professional fashion sketch of a model wearing the outfit described below.
 - The model should have a complexion similar to the one in the customer photo.
-- The model **must be wearing a stylish and elaborate West African style gele (headwrap)** made from the same fabric as the outfit. The gele style should be creative, complement the outfit, and **must not obscure important details of the garment like the neckline or shoulder design.**
-- The outfit in the sketch MUST be made from the provided fabric pattern.
+- The model **must be wearing a stylish and elaborate West African style gele (headwrap)** made from the same fabric shown in the first input image. The gele style should be creative, complement the outfit, and **must not obscure important details of the garment like the neckline or shoulder design.**
+- The outfit in the sketch MUST be made from the fabric shown in the first input image. Replicate the fabric's pattern, texture, and colors accurately on the garment.
 - Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo's typography** and ensure it is visually represented in the sketch.
 
 **Style Description:**
@@ -203,7 +209,13 @@ Refine a previous design based on user feedback and provide updated details.
       },
     });
 
-    const styleDetails = JSON.parse(textResponse.text);
+    let jsonText = textResponse.text.trim();
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.substring(7, jsonText.length - 3).trim();
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.substring(3, jsonText.length - 3).trim();
+    }
+    const styleDetails = JSON.parse(jsonText);
 
     if (!styleDetails?.description) {
       console.error("Failed to generate valid refined style details from text model.", textResponse.text);
@@ -213,8 +225,8 @@ Refine a previous design based on user feedback and provide updated details.
     // Step 2: Generate new fashion sketch
     const imagePrompt = `Generate a new professional fashion sketch of a model wearing the refined outfit described below.
 - The model should have a complexion similar to the one in the customer photo.
-- The model **must be wearing a stylish and elaborate West African style gele (headwrap)** made from the same fabric as the outfit. The gele style should be creative, complement the outfit, and **must not obscure important details of the garment like the neckline or shoulder design.**
-- The outfit in the sketch MUST be made from the provided fabric pattern.
+- The model **must be wearing a stylish and elaborate West African style gele (headwrap)** made from the same fabric shown in the first input image. The gele style should be creative, complement the outfit, and **must not obscure important details of the garment like the neckline or shoulder design.**
+- The outfit in the sketch MUST be made from the fabric shown in the first input image. Replicate the fabric's pattern, texture, and colors accurately on the garment.
 - Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo's typography** and ensure it is visually represented in the sketch.
 
 **Refined Style Description:**
