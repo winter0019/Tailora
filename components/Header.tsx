@@ -7,7 +7,7 @@ export const Header: React.FC = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
-             <Logo className="h-8 w-auto text-indigo-600 dark:text-indigo-400" />
+             <Logo className="h-8 w-auto" />
           </div>
         </div>
       </div>

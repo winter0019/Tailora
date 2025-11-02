@@ -59,7 +59,7 @@ ${inspirationText}
     *   Body Nature/Type: ${customerDetails.bodyNature}
 
 **Instructions:**
-1.  **Branding Mandate:** Every design must subtly incorporate an element inspired by the Tailora brand logo, which is a stylized letter 'B' that also represents a needle and thread. This could be through an embroidery pattern on the cuff, a unique clasp design, a fabric print detail, or a distinctive cut. **You must mention how the logo is incorporated in your description.**
+1.  **Branding Mandate:** Every design must subtly incorporate an element inspired by the Tailora brand logo's typography. This could be through an embroidery pattern that mimics the elegant serifs of the 'T', a clasp design shaped like the circular dot of the 'i', or a cut that flows like the curves of the 'a' and 'r'. **You must mention how the logo's typography is incorporated in your description.**
 2.  **Combine elements creatively** from the selected cultural pools.
 3.  Give the style a creative, descriptive name that reflects its fused nature.
 4.  **Crucially, every style you generate must be a fresh and random combination within the given constraints.**
@@ -98,8 +98,9 @@ ${inspirationText}
     // Step 2: Generate fashion sketch based on the description
     const imagePrompt = `Generate a professional fashion sketch of a model wearing the outfit described below.
 - The model should have a complexion similar to the one in the customer photo.
+- The model **must be wearing a stylish turban (headwrap)** made from the same fabric as the outfit.
 - The outfit in the sketch MUST be made from the provided fabric pattern.
-- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo** (a stylized 'B' representing a needle and thread) and ensure it is visually represented in the sketch.
+- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo's typography** and ensure it is visually represented in the sketch.
 
 **Style Description:**
 ${styleDetails.description}`;
@@ -173,7 +174,7 @@ Refine a previous design based on user feedback and provide updated details.
     *   Body Nature/Type: ${customerDetails.bodyNature}
 
 **Instructions:**
-1.  **Branding Mandate:** Ensure the refined design still subtly incorporates an element inspired by the Tailora brand logo (a stylized 'B' representing a needle and thread).
+1.  **Branding Mandate:** Ensure the refined design still subtly incorporates an element inspired by the Tailora brand logo's typography (e.g., elegant serifs, letter curves).
 2.  **Modify the previous design's description** according to the user's request. Do not create a completely new design.
 3.  Update the style name to reflect the changes (e.g., "Embroidered [Original Name]").
 4.  Keep the "occasions" suitable for the modified design.
@@ -211,8 +212,9 @@ Refine a previous design based on user feedback and provide updated details.
     // Step 2: Generate new fashion sketch
     const imagePrompt = `Generate a new professional fashion sketch of a model wearing the refined outfit described below.
 - The model should have a complexion similar to the one in the customer photo.
+- The model **must be wearing a stylish turban (headwrap)** made from the same fabric as the outfit.
 - The outfit in the sketch MUST be made from the provided fabric pattern.
-- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo** (a stylized 'B' representing a needle and thread) and ensure it is visually represented in the sketch.
+- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo's typography** and ensure it is visually represented in the sketch.
 
 **Refined Style Description:**
 ${styleDetails.description}`;
