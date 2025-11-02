@@ -1,4 +1,3 @@
-
 const esbuild = require('esbuild');
 
 esbuild.build({
@@ -7,7 +6,7 @@ esbuild.build({
   outfile: 'main.js',
   jsx: 'automatic',
   define: {
-    'process.env.API_KEY': JSON.stringify(process.env.gemini_api_keys || '')
+    'process.env.API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || '')
   },
 }).catch((err) => {
     console.error("Build failed:", err);
