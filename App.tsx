@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ImageUploader } from './components/ImageUploader';
 import { CustomerForm } from './components/CustomerForm';
@@ -31,6 +31,35 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [refiningId, setRefiningId] = useState<string | null>(null);
   const [error, setError] = useState<React.ReactNode | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [cooldownTimer, setCooldownTimer] = useState<string>('');
+
+  useEffect(() => {
+    if (!cooldownUntil) {
+      setCooldownTimer('');
+      return;
+    };
+
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      const secondsLeft = Math.ceil((cooldownUntil - now) / 1000);
+
+      if (secondsLeft <= 0) {
+        setCooldownUntil(null);
+        clearInterval(intervalId);
+      } else {
+        setCooldownTimer(`Try again in ${secondsLeft}s`);
+      }
+    }, 1000);
+
+    // Initial set
+    const secondsLeft = Math.ceil((cooldownUntil - Date.now()) / 1000);
+    if (secondsLeft > 0) {
+        setCooldownTimer(`Try again in ${secondsLeft}s`);
+    }
+
+    return () => clearInterval(intervalId);
+  }, [cooldownUntil]);
   
   const handleImageChange = (setter: (file: File | null) => void, previewSetter: (url: string | null) => void) => (file: File | null) => {
     setter(file);
@@ -105,20 +134,29 @@ const App: React.FC = () => {
 
   const handleError = (err: unknown) => {
       console.error(err);
-      if (err instanceof Error && (err.message.includes("quota") || err.message.includes("RESOURCE_EXHAUSTED"))) {
-        setError(
-          <>
-            You've exceeded your usage limit. Please ensure your API key is linked to a billing-enabled project.
-            {' '}
-            <a href="https://ai.google.dev/gemini-api/docs/rate-limits" target="_blank" rel="noopener noreferrer" className="font-semibold underline hover:text-red-800">
-              Learn more.
-            </a>
-          </>
-        );
-      } else if (err instanceof Error && err.message.includes("API key")) {
-        setError(<>The API key is missing, invalid, or not authorized for this project. Please ensure it is configured correctly.</>);
+      if (err instanceof Error) {
+        if (err.message.includes("quota")) {
+            setError(
+              <>
+                Our creative studio is very popular right now! Please wait a moment before trying again.
+              </>
+            );
+            setCooldownUntil(Date.now() + 60000); // 60 second cooldown
+        } else if (err.message.includes("RESOURCE_EXHAUSTED")) {
+            setError(
+              <>
+                A billing issue may be preventing the request. Please ensure your API key is linked to a Google Cloud project with an active billing account.
+                {' '}
+                <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="font-semibold underline hover:text-red-800">
+                  Learn more about billing.
+                </a>
+              </>
+            );
+        } else {
+          setError("Failed to generate a style. Our creative engine may be busy. Please try again.");
+        }
       } else {
-        setError("Failed to generate a style. Our creative engine may be busy. Please try again.");
+          setError("An unexpected error occurred. Please try again.");
       }
   }
 
@@ -197,7 +235,7 @@ const App: React.FC = () => {
     }
   }, [fabricImage, customerImage, customerDetails, suggestions]);
 
-  const isButtonDisabled = !fabricImage || !customerImage || !customerDetails.bodySize || !customerDetails.bodyNature || stylePreferences.inspirations.length === 0 || isLoading;
+  const isButtonDisabled = !fabricImage || !customerImage || !customerDetails.bodySize || !customerDetails.bodyNature || stylePreferences.inspirations.length === 0 || isLoading || !!cooldownUntil;
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
@@ -283,7 +321,7 @@ const App: React.FC = () => {
                   aria-label={isLoading ? 'Generating style...' : suggestions.length > 0 ? 'Generate Another Style Idea' : 'Generate Style Idea'}
               >
                   <SparklesIcon />
-                  {isLoading ? 'Generating...' : suggestions.length > 0 ? 'Generate Another Style' : 'Generate Style Idea'}
+                  {isLoading ? 'Generating...' : cooldownTimer || (suggestions.length > 0 ? 'Generate Another Style' : 'Generate Style Idea')}
               </button>
           </div>
       </footer>
