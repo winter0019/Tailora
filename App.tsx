@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ImageUploader } from './components/ImageUploader';
@@ -9,10 +8,7 @@ import { Loader } from './components/Loader';
 import { SparklesIcon } from './components/icons/SparklesIcon';
 import { generateStyle, refineStyle } from './services/geminiService';
 import type { CustomerDetails, StyleSuggestion, StylePreferences as StylePreferencesType } from './types';
-
-// Fix: Removed conflicting global declaration for `window.aistudio`.
-// The type definition is expected to be provided by the execution environment,
-// and this redeclaration caused a conflict.
+import { InfoIcon } from './components/icons/InfoIcon';
 
 const App: React.FC = () => {
   const [fabricImage, setFabricImage] = useState<File | null>(null);
@@ -78,7 +74,7 @@ const App: React.FC = () => {
   const handleCustomerImageChange = handleImageChange(setCustomerImage, setCustomerImagePreview);
 
 
-  const handleDetailsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleDetailsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setCustomerDetails(prev => ({ ...prev, [name]: value }));
   };
@@ -135,23 +131,17 @@ const App: React.FC = () => {
   const handleError = (err: unknown) => {
       console.error(err);
       if (err instanceof Error) {
-        if (err.message.includes("quota")) {
+        if (
+            err.message.includes("quota") ||
+            err.message.includes("RESOURCE_EXHAUSTED") ||
+            err.message.includes("API key not valid")
+        ) {
             setError(
-              <>
-                Our creative studio is very popular right now! Please wait a moment before trying again.
-              </>
+              "Our creative engine is currently at capacity or there's a configuration issue. Please try again in a moment."
             );
-            setCooldownUntil(Date.now() + 60000); // 60 second cooldown
-        } else if (err.message.includes("RESOURCE_EXHAUSTED")) {
-            setError(
-              <>
-                A billing issue may be preventing the request. Please ensure your API key is linked to a Google Cloud project with an active billing account.
-                {' '}
-                <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="font-semibold underline hover:text-red-800">
-                  Learn more about billing.
-                </a>
-              </>
-            );
+            if (err.message.includes("quota")) {
+                setCooldownUntil(Date.now() + 60000);
+            }
         } else {
           setError("Failed to generate a style. Our creative engine may be busy. Please try again.");
         }
@@ -294,6 +284,18 @@ const App: React.FC = () => {
                             preferences={stylePreferences}
                             onPreferencesChange={handlePreferencesChange}
                         />
+
+                        <div className="p-4 bg-indigo-50 dark:bg-slate-700/50 rounded-lg flex items-start gap-3">
+                            <div className="flex-shrink-0 text-indigo-500 dark:text-indigo-400 mt-0.5">
+                                <InfoIcon className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">A Touch of Tailora</h4>
+                                <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1">
+                                    Every generated style subtly incorporates our brand's elegant typography and signature gold color for a unique, branded finish.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
