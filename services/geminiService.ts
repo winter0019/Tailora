@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import type { CustomerDetails, StyleSuggestion, StylePreferences } from '../types';
 
@@ -60,7 +59,10 @@ ${inspirationText}
     *   Body Nature/Type: ${customerDetails.bodyNature}
 
 **Instructions:**
-1.  **Branding Mandate:** Every design must subtly incorporate an element inspired by the Tailora brand logo's typography. This could be through an embroidery pattern that mimics the elegant serifs of the 'T', a clasp design shaped like the circular dot of the 'i', or a cut that flows like the curves of the 'a' and 'r'. **You must mention how the logo's typography is incorporated in your description.**
+1.  **Branding Mandate:** Every design must subtly incorporate elements inspired by the Tailora brand.
+    *   **Typography:** Incorporate a design element inspired by the Tailora brand logo's elegant serif typography. This could be through an embroidery pattern that mimics the serifs of the 'T', a clasp design shaped like the circular dot of the 'i', or a cut that flows like the curves of the 'a' and 'r'.
+    *   **Official Color:** Use the official Tailora brand color, a distinct gold (#D4AF37), as an accent. This could be for embroidery, buttons, a belt clasp, or a subtle trim.
+    *   **Mention:** You **must** mention how both the logo's typography and official color are incorporated in your description.
 2.  **Combine elements creatively** from the selected cultural pools.
 3.  Give the style a creative, descriptive name that reflects its fused nature.
 4.  **Crucially, every style you generate must be a fresh and random combination within the given constraints.**
@@ -107,7 +109,7 @@ ${inspirationText}
 - The model should have a complexion similar to the one in the customer photo.
 - The model **must be wearing a stylish and elaborate West African style gele (headwrap)** made from the same fabric shown in the first input image. The gele style should be creative, complement the outfit, and **must not obscure important details of the garment like the neckline or shoulder design.**
 - The outfit in the sketch MUST be made from the fabric shown in the first input image. Replicate the fabric's pattern, texture, and colors accurately on the garment.
-- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo's typography** and ensure it is visually represented in the sketch.
+- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo's typography and official gold color** and ensure it is visually represented in the sketch.
 
 **Style Description:**
 ${styleDetails.description}`;
@@ -181,7 +183,10 @@ Refine a previous design based on user feedback and provide updated details.
     *   Body Nature/Type: ${customerDetails.bodyNature}
 
 **Instructions:**
-1.  **Branding Mandate:** Ensure the refined design still subtly incorporates an element inspired by the Tailora brand logo's typography (e.g., elegant serifs, letter curves).
+1.  **Branding Mandate:** Ensure the refined design still subtly incorporates elements inspired by the Tailora brand.
+    *   **Typography:** The design must feature an element inspired by the Tailora brand logo's elegant serif typography.
+    *   **Official Color:** The design must use the official Tailora brand color, a distinct gold (#D4AF37), as an accent.
+    *   **Mention:** Your description must explain how these brand elements are included.
 2.  **Modify the previous design's description** according to the user's request. Do not create a completely new design.
 3.  Update the style name to reflect the changes (e.g., "Embroidered [Original Name]").
 4.  Keep the "occasions" suitable for the modified design.
@@ -227,7 +232,7 @@ Refine a previous design based on user feedback and provide updated details.
 - The model should have a complexion similar to the one in the customer photo.
 - The model **must be wearing a stylish and elaborate West African style gele (headwrap)** made from the same fabric shown in the first input image. The gele style should be creative, complement the outfit, and **must not obscure important details of the garment like the neckline or shoulder design.**
 - The outfit in the sketch MUST be made from the fabric shown in the first input image. Replicate the fabric's pattern, texture, and colors accurately on the garment.
-- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo's typography** and ensure it is visually represented in the sketch.
+- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo's typography and official gold color** and ensure it is visually represented in the sketch.
 
 **Refined Style Description:**
 ${styleDetails.description}`;
