@@ -7,7 +7,7 @@ esbuild.build({
   outfile: 'main.js',
   jsx: 'automatic',
   define: {
-    'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
+    'process.env.API_KEY': JSON.stringify(process.env.gemini_api_keys || '')
   },
 }).catch((err) => {
     console.error("Build failed:", err);
