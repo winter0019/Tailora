@@ -45,11 +45,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageChange, ima
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        className="mt-1 flex flex-col justify-center items-center p-4 border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-md hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors duration-200 min-h-[140px] aspect-video"
+        className="mt-1 flex flex-col justify-center items-center p-4 border-2 border-slate-300 dark:border-slate-600 border-dashed rounded-md hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors duration-200 h-48"
       >
         <div className="space-y-1 text-center">
           {imagePreviewUrl ? (
-            <img src={imagePreviewUrl} alt="Preview" className="mx-auto h-full max-h-48 object-contain rounded-md" />
+            <img src={imagePreviewUrl} alt="Preview" className="mx-auto h-full max-h-40 object-contain rounded-md" />
           ) : (
             <div className="flex flex-col items-center justify-center h-full">
               <div onClick={handleFileAreaClick} className="cursor-pointer p-4" aria-label={promptText}>
