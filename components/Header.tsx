@@ -1,3 +1,6 @@
+import React from 'react';
+import { Logo } from './icons/Logo';
+
 export const Header: React.FC = () => {
   return (
     <header className="bg-white dark:bg-slate-800 shadow-md sticky top-0 z-10">
