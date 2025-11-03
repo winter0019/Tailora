@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ==========================================================
-// --- 1. TYPE DEFINITIONS (Consolidated for single file) ---
+// --- 1. TYPE DEFINITIONS & API CONSTANTS ---
 // ==========================================================
+
+const API_KEY = ""; // Placeholder API Key
+const IMAGE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${API_KEY}`;
+const MAX_RETRIES = 5;
 
 /**
  * @typedef {Object} CustomerDetails
@@ -27,7 +31,7 @@ const StylePreferencesType = {
 /**
  * @typedef {Object} StyleSuggestion
  * @property {string} id - Unique ID for the suggestion.
- * @property {string} imageBase64 - Base64 image data or placeholder URL for the generated style.
+ * @property {string} imageBase64 - Base64 image data for the generated style.
  * @property {string} description - Detailed text description of the style.
  * @property {string} materialsUsed - Suggested materials.
  * @property {string} estimatedCost - Estimated tailoring cost range.
@@ -42,71 +46,135 @@ const StyleSuggestion = {
     refinementPrompt: '',
 };
 
-// ==========================================================
-// --- 2. MOCK SERVICE FUNCTIONS (Simulating API calls) ---
-// ==========================================================
-
 const INSPIRATION_OPTIONS = ['Modern', 'Traditional African (Aso-Oke, Adire)', 'Western Casual', 'Avant-Garde', 'Vintage 70s', 'Streetwear'];
 
+
+// ==========================================================
+// --- 2. API SERVICE FUNCTIONS ---
+// ==========================================================
+
 /**
- * Generates an initial style suggestion using simulated image processing and Gemini API call.
- * @returns {Promise<Omit<typeof StyleSuggestion, 'id'> | null>}
+ * Helper function for exponential backoff on API calls.
+ */
+const fetchWithRetry = async (url: string, options: RequestInit, retries: number): Promise<Response> => {
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            // Throw error to trigger retry if needed
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response;
+    } catch (error) {
+        if (retries === 0) {
+            throw new Error("Image generation failed after multiple retries.");
+        }
+        const delay = Math.pow(2, MAX_RETRIES - retries) * 1000 + Math.random() * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchWithRetry(url, options, retries - 1);
+    }
+};
+
+/**
+ * Calls the Imagen API to generate a photorealistic image based on the prompt.
+ * @param {string} prompt - The text prompt for image generation.
+ * @returns {Promise<string>} Base64 image data.
+ */
+const generateImageBase64 = async (prompt: string): Promise<string> => {
+    const payload = { 
+        instances: [{ prompt: prompt }], 
+        parameters: { 
+            "sampleCount": 1,
+            "aspectRatio": "3:4", // Ideal for fashion/portrait style
+        } 
+    };
+
+    const options: RequestInit = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    };
+
+    try {
+        const response = await fetchWithRetry(IMAGE_API_URL, options, MAX_RETRIES);
+        const result = await response.json();
+        
+        const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+
+        if (!base64Data) {
+            console.error("Imagen API Response:", result);
+            throw new Error("Image generation failed: No image data received. The prompt might be too complex or rejected by safety filters.");
+        }
+        return base64Data;
+    } catch (error) {
+        throw new Error(`Image API Error: ${error instanceof Error ? error.message : "Unknown API error"}`);
+    }
+};
+
+/**
+ * Creates a descriptive text prompt for the style based on all user inputs.
+ */
+const buildStylePrompt = (
+    customerDetails: typeof CustomerDetails, 
+    stylePreferences: typeof StylePreferencesType,
+    refinementPrompt?: string
+): string => {
+    const fabricDesc = "vibrant Nigerian Ankara print fabric in indigo, gold, and magenta"; 
+    const garment = stylePreferences.garmentType.toLowerCase();
+    const inspirations = stylePreferences.inspirations.join(', ');
+    const size = customerDetails.bodySize;
+    const build = customerDetails.bodyNature;
+    
+    let basePrompt = `Photorealistic image of a stunning custom-tailored **${garment}** designed for a **${size}, ${build}** body type. The garment is made entirely from a **${fabricDesc}** and is heavily inspired by **${inspirations}** styles. The style must be high-fashion, elegant, and modern, showing clear textile and tailoring details. The person is standing in a minimalist white studio background.`;
+
+    if (refinementPrompt) {
+        basePrompt += ` **REFINEMENT**: Focus the design update on: "${refinementPrompt}".`;
+    }
+
+    return basePrompt;
+};
+
+/**
+ * Generates an initial style suggestion using image generation and text analysis.
+ * Note: The text part is still mocked to simplify the demo but is ready for a Gemini API call.
  */
 const generateStyle = async (
-  fabricImageBase64,
-  fabricMimeType,
-  customerImageBase64,
-  customerMimeType,
-  customerDetails,
-  stylePreferences
+  customerDetails: typeof CustomerDetails,
+  stylePreferences: typeof StylePreferencesType
 ) => {
-  // Simulate an API call delay
-  await new Promise(resolve => setTimeout(resolve, 2500));
+    const prompt = buildStylePrompt(customerDetails, stylePreferences);
+    const base64Image = await generateImageBase64(prompt);
+    
+    // Simulate a text generation API call for the description and details
+    await new Promise(resolve => setTimeout(resolve, 1500)); 
 
-  // In a real application, you would call the Gemini API here.
-  
-  const size = "400x500";
-  const color = "4f46e5"; // Indigo
-  const text = stylePreferences.garmentType.replace(/ /g, '+') || "Style+Idea";
-  const placeholderUrl = `https://placehold.co/${size}/${color}/ffffff?text=${text}`;
-  
-  return {
-    imageBase64: placeholderUrl,
-    description: `A stunning fusion design: a tailored **${stylePreferences.garmentType.toLowerCase()}** inspired by the **${stylePreferences.inspirations.join(' & ')}** styles. It is designed for a customer with a ${customerDetails.bodySize} size and a ${customerDetails.bodyNature} build, maximizing the visual impact of the vibrant Nigerian fabric provided.`,
-    materialsUsed: "Ankara fabric with silk lining and custom gold-finished zipper.",
-    estimatedCost: "NGN 45,000 - NGN 75,000 (excluding fabric cost)",
-  };
+    return {
+        imageBase64: `data:image/jpeg;base64,${base64Image}`,
+        description: `A stunning fusion design: a tailored **${stylePreferences.garmentType.toLowerCase()}** inspired by the **${stylePreferences.inspirations.join(' & ')}** styles. It is designed for a customer with a ${customerDetails.bodySize} size and a ${customerDetails.bodyNature} build, maximizing the visual impact of the vibrant Nigerian fabric provided.`,
+        materialsUsed: "Ankara fabric with silk lining and custom gold-finished zipper.",
+        estimatedCost: "NGN 45,000 - NGN 75,000 (excluding fabric cost)",
+    };
 };
 
 /**
  * Refines an existing style suggestion based on a new prompt.
- * @returns {Promise<Omit<typeof StyleSuggestion, 'id'> | null>}
  */
 const refineStyle = async (
-  fabricImageBase64,
-  fabricMimeType,
-  customerImageBase64,
-  customerMimeType,
-  customerDetails,
-  originalSuggestion,
-  refinementPrompt
+  customerDetails: typeof CustomerDetails,
+  originalSuggestion: typeof StyleSuggestion,
+  refinementPrompt: string
 ) => {
-  // Simulate an API call delay
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  
-  // In a real application, you would call the Gemini API here for refinement.
-  
-  const size = "400x500";
-  const color = "8b5cf6"; // Violet
-  const text = `Refined+${refinementPrompt.substring(0, 15).replace(/ /g, '+')}`;
-  const placeholderUrl = `https://placehold.co/${size}/${color}/ffffff?text=${text}`;
+    const prompt = buildStylePrompt(customerDetails, stylePreferences, refinementPrompt);
+    const base64Image = await generateImageBase64(prompt);
+    
+    // Simulate a text generation API call for the refined description
+    await new Promise(resolve => setTimeout(resolve, 1500)); 
 
-  return {
-    ...originalSuggestion,
-    imageBase64: placeholderUrl,
-    description: `[Refined based on: "${refinementPrompt}"] The original concept has been updated to be more elegant and sophisticated, focusing on ${refinementPrompt.toLowerCase()}. This refinement emphasizes the customer's body type with a defined waistline.`,
-    refinementPrompt: refinementPrompt
-  };
+    return {
+        ...originalSuggestion,
+        imageBase64: `data:image/jpeg;base64,${base64Image}`,
+        description: `[Refined based on: "${refinementPrompt}"] The original concept has been updated to be more elegant and sophisticated, focusing on ${refinementPrompt.toLowerCase()}. This refinement emphasizes the customer's body type with a defined waistline.`,
+        refinementPrompt: refinementPrompt
+    };
 };
 
 // ==========================================================
@@ -350,7 +418,7 @@ const StylePreferences = ({ preferences, onPreferencesChange }) => {
 const Loader = () => (
     <div className="flex justify-center items-center py-12">
         <div className="relative">
-            <div className="h-12 w-12 rounded-full border-4 border-t-4 border-slate-200 animate-spin"></div>
+            <div className="h-12 w-12 rounded-full border-4 border-t-4 border-slate-200 dark:border-slate-600 animate-spin"></div>
             <div className="h-12 w-12 rounded-full border-4 border-indigo-500 border-t-transparent absolute top-0 left-0 animate-spin-slow"></div>
             <p className="mt-4 text-indigo-600 dark:text-indigo-400 font-semibold text-center">Thinking up designs...</p>
         </div>
@@ -376,13 +444,14 @@ const SuggestionCard = ({ suggestion, onRefine, isRefining }) => {
     return (
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 transition-transform hover:shadow-indigo-500/20">
             <div className="grid grid-cols-1 lg:grid-cols-3">
-                {/* Image Placeholder */}
+                {/* Image Display */}
                 <div className="lg:col-span-1 bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-4">
                     <img
                         src={suggestion.imageBase64}
                         alt="Generated Style Design"
                         className="w-full h-auto max-h-[400px] object-contain rounded-lg shadow-md"
-                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src="https://placehold.co/400x500/ef4444/ffffff?text=Image+Failed+to+Load" }}
+                        // Fallback image in case base64 data fails to render
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src="https://placehold.co/400x500/ef4444/ffffff?text=Image+Error" }}
                     />
                 </div>
 
@@ -544,67 +613,18 @@ const App: React.FC = () => {
         setStylePreferences(newPreferences);
     };
 
-    /**
-     * Resizes an image file and returns its base64 string and MIME type.
-     */
-    const resizeImageAndGetBase64 = (file: File, maxSize: number = 1024): Promise<{ base64: string, mimeType: string }> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                // @ts-ignore
-                if (!event.target?.result) {
-                    return reject(new Error("Failed to read file"));
-                }
-                // @ts-ignore
-                img.src = event.target.result as string;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let { width, height } = img;
-
-                    if (width > height) {
-                        if (width > maxSize) {
-                            height = Math.round(height * (maxSize / width));
-                            width = maxSize;
-                        }
-                    } else {
-                        if (height > maxSize) {
-                            width = Math.round(width * (maxSize / height));
-                            height = maxSize;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    if (!ctx) {
-                        return reject(new Error('Could not get canvas context'));
-                    }
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    const mimeType = 'image/jpeg';
-                    const dataUrl = canvas.toDataURL(mimeType, 0.85); // 85% quality
-                    const base64 = dataUrl.split(',')[1];
-                    resolve({ base64, mimeType });
-                };
-                img.onerror = (error) => reject(error);
-            };
-            reader.onerror = (error) => reject(error);
-        });
-    };
-
     const handleError = (err: unknown) => {
         console.error(err);
         if (err instanceof Error) {
             setError(err.message);
             
-            // Check for simulated quota error
-            if (err.message.includes("creative break")) {
-                setCooldownUntil(Date.now() + 60000); // 60 seconds cooldown
+            // Note: In a real app, this would check for specific API quota/rate limit errors
+            if (err.message.includes("API Error")) {
+                // Simulating a short cooldown for rate limits
+                setCooldownUntil(Date.now() + 15000); // 15 seconds cooldown
             }
         } else {
-            setError("An unexpected error occurred. Please try again.");
+            setError("An unexpected error occurred during design generation. Please check your inputs.");
         }
     }
 
@@ -619,15 +639,11 @@ const App: React.FC = () => {
         setIsLoading(true);
         
         try {
-            const { base64: fabricImageBase64, mimeType: fabricMimeType } = await resizeImageAndGetBase64(fabricImage);
-            const { base64: customerImageBase64, mimeType: customerMimeType } = await resizeImageAndGetBase64(customerImage);
+            // No need to resize/base64 images for the text-to-image API, 
+            // but these inputs are still crucial for prompt generation.
             
             // @ts-ignore - Ignoring TS error due to mock service return type structure
             const newSuggestionData = await generateStyle(
-                fabricImageBase64, 
-                fabricMimeType, 
-                customerImageBase64, 
-                customerMimeType, 
                 customerDetails, 
                 stylePreferences
             );
@@ -651,7 +667,7 @@ const App: React.FC = () => {
     const handleRefine = useCallback(async (suggestionId: string, refinementPrompt: string) => {
         const originalSuggestion = suggestions.find(s => s.id === suggestionId);
         if (!fabricImage || !customerImage || !originalSuggestion) {
-            setError('Cannot refine style. Original images or suggestion data is missing.');
+            setError('Cannot refine style. Original inputs or suggestion data is missing.');
             return;
         }
         
@@ -659,15 +675,8 @@ const App: React.FC = () => {
         setRefiningId(suggestionId);
         
         try {
-            const { base64: fabricImageBase64, mimeType: fabricMimeType } = await resizeImageAndGetBase64(fabricImage);
-            const { base64: customerImageBase64, mimeType: customerMimeType } = await resizeImageAndGetBase64(customerImage);
-            
             // @ts-ignore - Ignoring TS error due to mock service return type structure
             const refinedSuggestionData = await refineStyle(
-                fabricImageBase64,
-                fabricMimeType,
-                customerImageBase64,
-                customerMimeType,
                 customerDetails,
                 originalSuggestion,
                 refinementPrompt
