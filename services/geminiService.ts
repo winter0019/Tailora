@@ -40,8 +40,8 @@ export const generateStyle = async (
   const client = getAiClient();
 
   // ✅ Correct models
-  const textModel = "gemini-2.5-flash";
-  const imageModel = "gemini-2.5-flash";
+  const textModel = "gemini-2.5-flash"; // text generation
+  const imageModel = "gemini-2.5-flash-image"; // image generation
 
   try {
     // Step 1: Generate text-based style idea
@@ -177,7 +177,7 @@ export const refineStyle = async (
 ): Promise<Omit<StyleSuggestion, "id"> | null> => {
   const client = getAiClient();
   const textModel = "gemini-2.5-flash";
-  const imageModel = "gemini-2.5-flash";
+  const imageModel = "gemini-2.5-flash-image"; // ✅ corrected
 
   try {
     const textPrompt = `You are 'Tailora', refining a previous fashion design.
