@@ -1,16 +1,13 @@
-import React from "react";
-
-export const Logo: React.FC<{ className?: string }> = ({ className }) => {
+export const Header: React.FC = () => {
   return (
-    <div className={`flex items-center ${className || ""}`}>
-      <img
-        src="/tailora-logo.png"
-        alt="Tailora Logo"
-        className="h-8 w-auto mr-2"
-      />
-      <span className="text-2xl font-semibold text-yellow-500 tracking-wide">
-        Ailora
-      </span>
-    </div>
+    <header className="bg-white dark:bg-slate-800 shadow-md sticky top-0 z-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-2">
+            <Logo className="h-8 w-auto" />
+          </div>
+        </div>
+      </div>
+    </header>
   );
 };
