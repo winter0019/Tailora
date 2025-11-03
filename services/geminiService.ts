@@ -2,12 +2,13 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 import type { CustomerDetails, StyleSuggestion, StylePreferences } from '../types';
 
 function getAiClient(): GoogleGenAI {
-  // The API key is expected to be available as a pre-configured environment variable.
-  const apiKey = process.env.API_KEY;
+  // Prefer GEMINI_API_KEY, fallback to API_KEY for flexibility
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+
   if (!apiKey) {
-    // This error will be caught by the UI and displayed to the user.
-    throw new Error("API key not found. Please ensure it is configured in the environment.");
+    throw new Error("Gemini API key not found. Please ensure GEMINI_API_KEY is set in the environment.");
   }
+
   return new GoogleGenAI({ apiKey });
 }
 
