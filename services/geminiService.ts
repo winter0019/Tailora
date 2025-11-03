@@ -27,6 +27,58 @@ const inspirationPool = {
 };
 
 /**
+ * Checks available models and returns the best image-capable model.
+ */
+const getImageModel = async (client: GoogleGenAI): Promise<string> => {
+  try {
+    const models = await client.models.list();
+    if (models.some((m) => m.name === "gemini-2.5-flash-preview-image")) {
+      return "gemini-2.5-flash-preview-image"; // Studio/new preview model
+    }
+  } catch (error) {
+    console.warn("Could not fetch model list, falling back to default image model:", error);
+  }
+  return "gemini-1.5-flash"; // fallback for other environments
+};
+
+/**
+ * Safe image generation with fallback.
+ */
+const safeGenerateImage = async (
+  client: GoogleGenAI,
+  imageModel: string,
+  fabricImageBase64: string,
+  fabricMimeType: string,
+  customerImageBase64: string,
+  customerMimeType: string,
+  prompt: string
+): Promise<string | null> => {
+  try {
+    const imageResponse = await client.models.generateContent({
+      model: imageModel,
+      contents: {
+        role: "user",
+        parts: [
+          { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
+          { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
+          { text: prompt },
+        ],
+      },
+      config: { responseModalities: [Modality.IMAGE] },
+    });
+
+    const parts = imageResponse.candidates?.[0]?.content?.parts || [];
+    const sketchPart = parts.find((p) => p.inlineData);
+    return sketchPart
+      ? `data:${sketchPart.inlineData.mimeType};base64,${sketchPart.inlineData.data}`
+      : null;
+  } catch (error: any) {
+    console.warn("⚠️ Image generation failed, falling back to text-only:", error.message);
+    return null;
+  }
+};
+
+/**
  * Generates a new fashion style suggestion with sketch.
  */
 export const generateStyle = async (
@@ -39,9 +91,8 @@ export const generateStyle = async (
 ): Promise<Omit<StyleSuggestion, "id"> | null> => {
   const client = getAiClient();
 
-  // ✅ Correct models
   const textModel = "gemini-2.5-flash"; // text generation
-  const imageModel = "gemini-2.5-flash-image"; // image generation
+  const imageModel = await getImageModel(client);
 
   try {
     // Step 1: Generate text-based style idea
@@ -116,7 +167,7 @@ Output must be a valid JSON object with:
       return null;
     }
 
-    // Step 2: Generate sketch
+    // Step 2: Generate sketch (optional)
     const imagePrompt = `Generate a professional fashion sketch based on this description:
 ${styleDetails.description}
 
@@ -126,39 +177,23 @@ Guidelines:
 - Include a West African-style gele (headwrap) that complements the outfit without hiding neckline/shoulders.
 - Visually include Tailora’s gold (#D4AF37) and logo-inspired typography elements.`;
 
-    const imageResponse = await client.models.generateContent({
-      model: imageModel,
-      contents: {
-        role: "user",
-        parts: [
-          { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
-          { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
-          { text: imagePrompt },
-        ],
-      },
-      config: { responseModalities: [Modality.IMAGE] },
-    });
-
-    const parts = imageResponse.candidates?.[0]?.content?.parts || [];
-    const sketchPart = parts.find((p) => p.inlineData);
-    const sketchUrl = sketchPart
-      ? `data:${sketchPart.inlineData.mimeType};base64,${sketchPart.inlineData.data}`
-      : null;
-
-    if (!sketchUrl) {
-      console.error("Failed to generate sketch image.");
-      return null;
-    }
+    const sketchUrl = await safeGenerateImage(
+      client,
+      imageModel,
+      fabricImageBase64,
+      fabricMimeType,
+      customerImageBase64,
+      customerMimeType,
+      imagePrompt
+    );
 
     return { ...styleDetails, sketchUrl };
   } catch (error: any) {
     console.error("Error in generateStyle:", error);
-
     if (error.message?.includes("429") || error.message?.includes("capacity"))
       throw new Error("Tailora is taking a short creative break. Please try again soon.");
     if (error.message?.includes("403") || error.message?.includes("API key"))
       throw new Error("Invalid or missing Gemini API key. Please check your configuration.");
-
     throw new Error("Something went wrong generating your design. Please retry shortly.");
   }
 };
@@ -176,8 +211,9 @@ export const refineStyle = async (
   refinementPrompt: string
 ): Promise<Omit<StyleSuggestion, "id"> | null> => {
   const client = getAiClient();
+
   const textModel = "gemini-2.5-flash";
-  const imageModel = "gemini-2.5-flash-image"; // ✅ corrected
+  const imageModel = await getImageModel(client);
 
   try {
     const textPrompt = `You are 'Tailora', refining a previous fashion design.
@@ -236,39 +272,23 @@ Output valid JSON with:
 ${styleDetails.description}
 Follow same image and branding rules as before.`;
 
-    const imageResponse = await client.models.generateContent({
-      model: imageModel,
-      contents: {
-        role: "user",
-        parts: [
-          { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
-          { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
-          { text: imagePrompt },
-        ],
-      },
-      config: { responseModalities: [Modality.IMAGE] },
-    });
-
-    const parts = imageResponse.candidates?.[0]?.content?.parts || [];
-    const sketchPart = parts.find((p) => p.inlineData);
-    const sketchUrl = sketchPart
-      ? `data:${sketchPart.inlineData.mimeType};base64,${sketchPart.inlineData.data}`
-      : null;
-
-    if (!sketchUrl) {
-      console.error("Failed to generate refined sketch image.");
-      return null;
-    }
+    const sketchUrl = await safeGenerateImage(
+      client,
+      imageModel,
+      fabricImageBase64,
+      fabricMimeType,
+      customerImageBase64,
+      customerMimeType,
+      imagePrompt
+    );
 
     return { ...styleDetails, sketchUrl };
   } catch (error: any) {
     console.error("Error in refineStyle:", error);
-
     if (error.message?.includes("429") || error.message?.includes("capacity"))
       throw new Error("Tailora is taking a short creative break. Please try again soon.");
     if (error.message?.includes("403") || error.message?.includes("API key"))
       throw new Error("Invalid or missing Gemini API key. Please check your configuration.");
-
     throw new Error("Something went wrong refining your design. Please retry shortly.");
   }
 };
