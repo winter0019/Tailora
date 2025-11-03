@@ -131,19 +131,12 @@ const App: React.FC = () => {
   const handleError = (err: unknown) => {
       console.error(err);
       if (err instanceof Error) {
-        if (
-            err.message.includes("quota") ||
-            err.message.includes("RESOURCE_EXHAUSTED") ||
-            err.message.includes("API key not valid")
-        ) {
-            setError(
-              "Our creative engine is currently at capacity or there's a configuration issue. Please try again in a moment."
-            );
-            if (err.message.includes("quota")) {
-                setCooldownUntil(Date.now() + 60000);
-            }
-        } else {
-          setError("Failed to generate a style. Our creative engine may be busy. Please try again.");
+        // The service layer now provides user-friendly messages.
+        setError(err.message);
+        
+        // The service throws "Tailora is taking a short creative break..." for quota errors.
+        if (err.message.includes("creative break")) {
+            setCooldownUntil(Date.now() + 60000);
         }
       } else {
           setError("An unexpected error occurred. Please try again.");

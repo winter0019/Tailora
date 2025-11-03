@@ -8,7 +8,7 @@ export interface StyleSuggestion {
   styleName: string;
   description: string;
   occasions: string;
-  sketchUrl: string;
+  sketchUrl: string | null;
 }
 
 export interface StylePreferences {

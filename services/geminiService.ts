@@ -1,52 +1,30 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import type { CustomerDetails, StyleSuggestion, StylePreferences } from "../types";
+import type { CustomerDetails, StyleSuggestion, StylePreferences } from '../types';
 
-/**
- * Initializes the Gemini client using the correct environment variable.
- */
 function getAiClient(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  // The API key is expected to be available as a pre-configured environment variable.
+  const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    throw new Error(
-      "Gemini API key not found. Please ensure GEMINI_API_KEY is set in your environment."
-    );
+    // This error will be caught by the UI and displayed to the user.
+    throw new Error("API key not found. Please ensure it is configured in the environment.");
   }
   return new GoogleGenAI({ apiKey });
 }
 
-/**
- * Inspiration pool for Tailora cultural fusion.
- */
 const inspirationPool = {
-  Nigerian:
-    "Ankara prints, Aso-Oke weaving, Adire patterns, Buba/Iro styles, Agbada embroidery.",
-  "Middle Eastern": "Abaya silhouettes, Kaftan elegance, intricate embroidery.",
-  "East Asian": "Chinese Qipao collars, Japanese Kimono sleeves, Korean Hanbok layering.",
-  European: "Victorian-era corsetry/ruffles, sleek English tailoring, French haute couture draping.",
-  "South Asian": "Saree draping, Lehenga skirts, intricate Zari work.",
+    "Nigerian": "Ankara prints, Aso-Oke weaving, Adire patterns, Buba/Iro styles, Agbada embroidery.",
+    "Middle Eastern": "Abaya silhouettes, Kaftan elegance, intricate embroidery.",
+    "East Asian": "Chinese Qipao collars, Japanese Kimono sleeves, Korean Hanbok layering.",
+    "European": "Victorian-era corsetry/ruffles, sleek English tailoring, French haute couture draping.",
+    "South Asian": "Saree draping, Lehenga skirts, intricate Zari work."
 };
 
 /**
- * Checks available models and returns the best image-capable model.
- */
-const getImageModel = async (client: GoogleGenAI): Promise<string> => {
-  try {
-    const models = await client.models.list();
-    if (models.some((m) => m.name === "gemini-2.5-flash-preview-image")) {
-      return "gemini-2.5-flash-preview-image"; // Studio/new preview model
-    }
-  } catch (error) {
-    console.warn("Could not fetch model list, falling back to default image model:", error);
-  }
-  return "gemini-1.5-flash"; // fallback for other environments
-};
-
-/**
- * Safe image generation with fallback.
+ * Safely generates an image and returns a data URL, or null if generation fails.
+ * This prevents image generation errors from stopping the entire process.
  */
 const safeGenerateImage = async (
   client: GoogleGenAI,
-  imageModel: string,
   fabricImageBase64: string,
   fabricMimeType: string,
   customerImageBase64: string,
@@ -54,10 +32,10 @@ const safeGenerateImage = async (
   prompt: string
 ): Promise<string | null> => {
   try {
+    const imageModel = 'gemini-2.5-flash-image';
     const imageResponse = await client.models.generateContent({
       model: imageModel,
       contents: {
-        role: "user",
         parts: [
           { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
           { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
@@ -73,14 +51,12 @@ const safeGenerateImage = async (
       ? `data:${sketchPart.inlineData.mimeType};base64,${sketchPart.inlineData.data}`
       : null;
   } catch (error: any) {
-    console.warn("⚠️ Image generation failed, falling back to text-only:", error.message);
-    return null;
+    console.warn("⚠️ Image generation failed, will proceed with text-only:", error.message);
+    return null; // Return null on failure, so text generation can still succeed.
   }
 };
 
-/**
- * Generates a new fashion style suggestion with sketch.
- */
+
 export const generateStyle = async (
   fabricImageBase64: string,
   fabricMimeType: string,
@@ -88,11 +64,9 @@ export const generateStyle = async (
   customerMimeType: string,
   customerDetails: CustomerDetails,
   stylePreferences: StylePreferences
-): Promise<Omit<StyleSuggestion, "id"> | null> => {
+): Promise<Omit<StyleSuggestion, 'id'> | null> => {
   const client = getAiClient();
-
-  const textModel = "gemini-2.5-flash"; // text generation
-  const imageModel = await getImageModel(client);
+  const textModel = 'gemini-2.5-flash';
 
   try {
     // Step 1: Generate text-based style idea
@@ -135,16 +109,15 @@ Output must be a valid JSON object with:
 
     const textResponse = await client.models.generateContent({
       model: textModel,
-      contents: {
-        role: "user",
+      contents: { 
         parts: [
-          { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
-          { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
-          { text: textPrompt },
-        ],
+            { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
+            { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
+            { text: textPrompt }
+        ] 
       },
       config: {
-        responseMimeType: "application/json",
+        responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
           properties: {
@@ -157,14 +130,17 @@ Output must be a valid JSON object with:
       },
     });
 
-    let jsonText = textResponse.text?.trim() || "";
-    if (jsonText.startsWith("```json")) jsonText = jsonText.slice(7, -3).trim();
-    else if (jsonText.startsWith("```")) jsonText = jsonText.slice(3, -3).trim();
-
+    let jsonText = textResponse.text.trim();
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.substring(7, jsonText.length - 3).trim();
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.substring(3, jsonText.length - 3).trim();
+    }
     const styleDetails = JSON.parse(jsonText);
+
     if (!styleDetails?.description) {
-      console.error("Invalid style details:", textResponse.text);
-      return null;
+        console.error("Failed to generate valid style details from text model.", textResponse.text);
+        return null;
     }
 
     // Step 2: Generate sketch (optional)
@@ -179,28 +155,26 @@ Guidelines:
 
     const sketchUrl = await safeGenerateImage(
       client,
-      imageModel,
       fabricImageBase64,
       fabricMimeType,
       customerImageBase64,
       customerMimeType,
       imagePrompt
     );
-
+    
     return { ...styleDetails, sketchUrl };
+
   } catch (error: any) {
     console.error("Error in generateStyle:", error);
-    if (error.message?.includes("429") || error.message?.includes("capacity"))
+    if (error.message?.includes("quota") || error.message?.includes("RESOURCE_EXHAUSTED"))
       throw new Error("Tailora is taking a short creative break. Please try again soon.");
-    if (error.message?.includes("403") || error.message?.includes("API key"))
+    if (error.message?.includes("API key not valid"))
       throw new Error("Invalid or missing Gemini API key. Please check your configuration.");
     throw new Error("Something went wrong generating your design. Please retry shortly.");
   }
 };
 
-/**
- * Refines an existing design based on feedback.
- */
+
 export const refineStyle = async (
   fabricImageBase64: string,
   fabricMimeType: string,
@@ -209,13 +183,12 @@ export const refineStyle = async (
   customerDetails: CustomerDetails,
   previousSuggestion: StyleSuggestion,
   refinementPrompt: string
-): Promise<Omit<StyleSuggestion, "id"> | null> => {
+): Promise<Omit<StyleSuggestion, 'id'> | null> => {
   const client = getAiClient();
-
-  const textModel = "gemini-2.5-flash";
-  const imageModel = await getImageModel(client);
+  const textModel = 'gemini-2.5-flash';
 
   try {
+    // Step 1: Refine style details (JSON)
     const textPrompt = `You are 'Tailora', refining a previous fashion design.
 
 **Previous Design:**
@@ -236,16 +209,15 @@ Output valid JSON with:
 
     const textResponse = await client.models.generateContent({
       model: textModel,
-      contents: {
-        role: "user",
+      contents: { 
         parts: [
-          { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
-          { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
-          { text: textPrompt },
-        ],
+            { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
+            { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
+            { text: textPrompt }
+        ] 
       },
       config: {
-        responseMimeType: "application/json",
+        responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
           properties: {
@@ -258,36 +230,40 @@ Output valid JSON with:
       },
     });
 
-    let jsonText = textResponse.text?.trim() || "";
-    if (jsonText.startsWith("```json")) jsonText = jsonText.slice(7, -3).trim();
-    else if (jsonText.startsWith("```")) jsonText = jsonText.slice(3, -3).trim();
-
+    let jsonText = textResponse.text.trim();
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.substring(7, jsonText.length - 3).trim();
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.substring(3, jsonText.length - 3).trim();
+    }
     const styleDetails = JSON.parse(jsonText);
+
     if (!styleDetails?.description) {
-      console.error("Invalid refined style details:", textResponse.text);
+      console.error("Failed to generate valid refined style details from text model.", textResponse.text);
       return null;
     }
 
+    // Step 2: Generate new fashion sketch
     const imagePrompt = `Generate a professional sketch for this refined design:
 ${styleDetails.description}
 Follow same image and branding rules as before.`;
 
     const sketchUrl = await safeGenerateImage(
       client,
-      imageModel,
       fabricImageBase64,
       fabricMimeType,
       customerImageBase64,
       customerMimeType,
       imagePrompt
     );
-
+    
     return { ...styleDetails, sketchUrl };
+
   } catch (error: any) {
     console.error("Error in refineStyle:", error);
-    if (error.message?.includes("429") || error.message?.includes("capacity"))
+    if (error.message?.includes("quota") || error.message?.includes("RESOURCE_EXHAUSTED"))
       throw new Error("Tailora is taking a short creative break. Please try again soon.");
-    if (error.message?.includes("403") || error.message?.includes("API key"))
+    if (error.message?.includes("API key not valid"))
       throw new Error("Invalid or missing Gemini API key. Please check your configuration.");
     throw new Error("Something went wrong refining your design. Please retry shortly.");
   }
