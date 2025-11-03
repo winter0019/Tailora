@@ -1,25 +1,34 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import type { CustomerDetails, StyleSuggestion, StylePreferences } from '../types';
+import type { CustomerDetails, StyleSuggestion, StylePreferences } from "../types";
 
+/**
+ * Initializes the Gemini client using the correct environment variable.
+ */
 function getAiClient(): GoogleGenAI {
-  // Prefer GEMINI_API_KEY, fallback to API_KEY for flexibility
   const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
-
   if (!apiKey) {
-    throw new Error("Gemini API key not found. Please ensure GEMINI_API_KEY is set in the environment.");
+    throw new Error(
+      "Gemini API key not found. Please ensure GEMINI_API_KEY is set in your environment."
+    );
   }
-
   return new GoogleGenAI({ apiKey });
 }
 
+/**
+ * Inspiration pool for Tailora cultural fusion.
+ */
 const inspirationPool = {
-    "Nigerian": "Ankara prints, Aso-Oke weaving, Adire patterns, Buba/Iro styles, Agbada embroidery.",
-    "Middle Eastern": "Abaya silhouettes, Kaftan elegance, intricate embroidery.",
-    "East Asian": "Chinese Qipao collars, Japanese Kimono sleeves, Korean Hanbok layering.",
-    "European": "Victorian-era corsetry/ruffles, sleek English tailoring, French haute couture draping.",
-    "South Asian": "Saree draping, Lehenga skirts, intricate Zari work."
+  Nigerian:
+    "Ankara prints, Aso-Oke weaving, Adire patterns, Buba/Iro styles, Agbada embroidery.",
+  "Middle Eastern": "Abaya silhouettes, Kaftan elegance, intricate embroidery.",
+  "East Asian": "Chinese Qipao collars, Japanese Kimono sleeves, Korean Hanbok layering.",
+  European: "Victorian-era corsetry/ruffles, sleek English tailoring, French haute couture draping.",
+  "South Asian": "Saree draping, Lehenga skirts, intricate Zari work.",
 };
 
+/**
+ * Generates a new fashion style suggestion with sketch.
+ */
 export const generateStyle = async (
   fabricImageBase64: string,
   fabricMimeType: string,
@@ -27,128 +36,136 @@ export const generateStyle = async (
   customerMimeType: string,
   customerDetails: CustomerDetails,
   stylePreferences: StylePreferences
-): Promise<Omit<StyleSuggestion, 'id'> | null> => {
+): Promise<Omit<StyleSuggestion, "id"> | null> => {
   const client = getAiClient();
-  const textModel = 'gemini-2.5-flash';
-  const imageModel = 'gemini-2.5-flash-image';
+
+  // ✅ Correct models
+  const textModel = "gemini-2.5-flash";
+  const imageModel = "gemini-2.5-flash";
 
   try {
-    // Step 1: Generate style details (JSON)
-    const garmentTypeInstruction = stylePreferences.garmentType === 'Any'
-      ? "The output can be a **long gown, a short dress, a skirt and top set, or trousers and a blouse.**"
-      : `The output **must be a ${stylePreferences.garmentType}.**`;
-      
+    // Step 1: Generate text-based style idea
+    const garmentTypeInstruction =
+      stylePreferences.garmentType === "Any"
+        ? "The output can be a long gown, a short dress, a skirt and top set, or trousers and a blouse."
+        : `The output must be a ${stylePreferences.garmentType}.`;
+
     const selectedInspirations = ["Nigerian", ...stylePreferences.inspirations];
     const inspirationText = selectedInspirations
-        .map(key => `*   **${key}:** ${inspirationPool[key as keyof typeof inspirationPool]}`)
-        .join('\n');
-        
-    const textPrompt = `You are 'Tailora', a world-renowned creative partner for fashion designers, specializing in **cultural fusion design**. Your talent lies in blending traditional styles from different parts of the world to create stunning, unique, and modern garments.
+      .map(
+        (key) =>
+          `* **${key}:** ${inspirationPool[key as keyof typeof inspirationPool]}`
+      )
+      .join("\n");
 
-**Your Task:**
-Invent a novel fashion style by fusing elements from the following cultural styles: **Nigerian fashion and ${stylePreferences.inspirations.join(' & ')} fashion**.
+    const textPrompt = `You are 'Tailora', a creative AI fashion design assistant, specializing in **cultural fusion fashion**. 
+Invent a novel design fusing Nigerian fashion with ${stylePreferences.inspirations.join(" & ")} fashion.
 ${garmentTypeInstruction}
 
-**Inspiration Pool (You must use elements from these selected styles):**
+**Inspiration Pool:**
 ${inspirationText}
 
 **Inputs:**
-1.  **Fabric Image:** Analyze the provided Nigerian fabric for its pattern, texture, and colors.
-2.  **Customer Image:** Use their skin complexion to guide flattering color accents in your description.
-3.  **Customer Details:**
-    *   Body Size: ${customerDetails.bodySize}
-    *   Body Nature/Type: ${customerDetails.bodyNature}
+- Fabric: analyze texture, pattern, and color.
+- Customer: use complexion for flattering color choices.
+- Body Type: ${customerDetails.bodyNature}, Size: ${customerDetails.bodySize}.
 
-**Instructions:**
-1.  **Branding Mandate:** Every design must subtly incorporate elements inspired by the Tailora brand.
-    *   **Typography:** Incorporate a design element inspired by the Tailora brand logo's elegant serif typography. This could be through an embroidery pattern that mimics the serifs of the 'T', a clasp design shaped like the circular dot of the 'i', or a cut that flows like the curves of the 'a' and 'r'.
-    *   **Official Color:** Use the official Tailora brand color, a distinct gold (#D4AF37), as an accent. This could be for embroidery, buttons, a belt clasp, or a subtle trim.
-    *   **Mention:** You **must** mention how both the logo's typography and official color are incorporated in your description.
-2.  **Combine elements creatively** from the selected cultural pools.
-3.  Give the style a creative, descriptive name that reflects its fused nature.
-4.  **Crucially, every style you generate must be a fresh and random combination within the given constraints.**
-5.  Describe the final design in detail. This description will be used to generate a sketch, so be specific about the silhouette, cut, details, and how the fabric is used.
+**Tailora Branding Mandate:**
+- Include elements inspired by the Tailora logo’s serif typography (e.g., embroidery, clasp, or cut lines).
+- Include Tailora’s gold color (#D4AF37) subtly in the design.
+- Mention how both are incorporated.
 
-**Output Format:** Your response MUST be a single, valid JSON object with the specified schema.`;
-
-    const fabricImagePart = { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } };
-    const customerImagePart = { inlineData: { data: customerImageBase64, mimeType: customerMimeType } };
-    const textPart = { text: textPrompt };
+Output must be a valid JSON object with:
+{
+  "styleName": "...",
+  "description": "...",
+  "occasions": "..."
+}`;
 
     const textResponse = await client.models.generateContent({
       model: textModel,
-      contents: { parts: [fabricImagePart, customerImagePart, textPart] },
+      contents: {
+        role: "user",
+        parts: [
+          { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
+          { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
+          { text: textPrompt },
+        ],
+      },
       config: {
-        responseMimeType: 'application/json',
+        responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            styleName: { type: Type.STRING, description: "A creative, descriptive name for the fused style." },
-            description: { type: Type.STRING, description: "A detailed description of the garment, including silhouette, cut, how the fabric is used, and how the Tailora brand logo is incorporated. This will be used to generate a sketch." },
-            occasions: { type: Type.STRING, description: "Suitable occasions for wearing this style." },
+            styleName: { type: Type.STRING },
+            description: { type: Type.STRING },
+            occasions: { type: Type.STRING },
           },
           required: ["styleName", "description", "occasions"],
         },
       },
     });
 
-    let jsonText = textResponse.text.trim();
-    if (jsonText.startsWith('```json')) {
-      jsonText = jsonText.substring(7, jsonText.length - 3).trim();
-    } else if (jsonText.startsWith('```')) {
-      jsonText = jsonText.substring(3, jsonText.length - 3).trim();
-    }
+    let jsonText = textResponse.text?.trim() || "";
+    if (jsonText.startsWith("```json")) jsonText = jsonText.slice(7, -3).trim();
+    else if (jsonText.startsWith("```")) jsonText = jsonText.slice(3, -3).trim();
+
     const styleDetails = JSON.parse(jsonText);
-
     if (!styleDetails?.description) {
-        console.error("Failed to generate valid style details from text model.", textResponse.text);
-        return null;
+      console.error("Invalid style details:", textResponse.text);
+      return null;
     }
 
-    // Step 2: Generate fashion sketch based on the description
-    const imagePrompt = `Generate a professional fashion sketch of a model wearing the outfit described below.
-- The model should have a complexion similar to the one in the customer photo.
-- The model **must be wearing a stylish and elaborate West African style gele (headwrap)** made from the same fabric shown in the first input image. The gele style should be creative, complement the outfit, and **must not obscure important details of the garment like the neckline or shoulder design.**
-- The outfit in the sketch MUST be made from the fabric shown in the first input image. Replicate the fabric's pattern, texture, and colors accurately on the garment.
-- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo's typography and official gold color** and ensure it is visually represented in the sketch.
+    // Step 2: Generate sketch
+    const imagePrompt = `Generate a professional fashion sketch based on this description:
+${styleDetails.description}
 
-**Style Description:**
-${styleDetails.description}`;
-
-    const imageTextPart = { text: imagePrompt };
+Guidelines:
+- Use the customer's skin tone from the provided image.
+- Fabric must match the provided pattern and color.
+- Include a West African-style gele (headwrap) that complements the outfit without hiding neckline/shoulders.
+- Visually include Tailora’s gold (#D4AF37) and logo-inspired typography elements.`;
 
     const imageResponse = await client.models.generateContent({
       model: imageModel,
-      contents: { parts: [fabricImagePart, customerImagePart, imageTextPart] },
-      config: {
-        responseModalities: [Modality.IMAGE],
+      contents: {
+        role: "user",
+        parts: [
+          { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
+          { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
+          { text: imagePrompt },
+        ],
       },
+      config: { responseModalities: [Modality.IMAGE] },
     });
 
-    let sketchUrl: string | null = null;
     const parts = imageResponse.candidates?.[0]?.content?.parts || [];
-    for (const part of parts) {
-      if (part.inlineData) {
-        const { mimeType, data } = part.inlineData;
-        sketchUrl = `data:${mimeType};base64,${data}`;
-        break;
-      }
-    }
+    const sketchPart = parts.find((p) => p.inlineData);
+    const sketchUrl = sketchPart
+      ? `data:${sketchPart.inlineData.mimeType};base64,${sketchPart.inlineData.data}`
+      : null;
 
     if (!sketchUrl) {
-      console.error("Failed to generate sketch from image model.");
+      console.error("Failed to generate sketch image.");
       return null;
     }
-    
-    return { ...styleDetails, sketchUrl };
 
-  } catch (error) {
-    console.error("Error calling Gemini API:", error);
-    throw error;
+    return { ...styleDetails, sketchUrl };
+  } catch (error: any) {
+    console.error("Error in generateStyle:", error);
+
+    if (error.message?.includes("429") || error.message?.includes("capacity"))
+      throw new Error("Tailora is taking a short creative break. Please try again soon.");
+    if (error.message?.includes("403") || error.message?.includes("API key"))
+      throw new Error("Invalid or missing Gemini API key. Please check your configuration.");
+
+    throw new Error("Something went wrong generating your design. Please retry shortly.");
   }
 };
 
-
+/**
+ * Refines an existing design based on feedback.
+ */
 export const refineStyle = async (
   fabricImageBase64: string,
   fabricMimeType: string,
@@ -157,116 +174,101 @@ export const refineStyle = async (
   customerDetails: CustomerDetails,
   previousSuggestion: StyleSuggestion,
   refinementPrompt: string
-): Promise<Omit<StyleSuggestion, 'id'> | null> => {
+): Promise<Omit<StyleSuggestion, "id"> | null> => {
   const client = getAiClient();
-  const textModel = 'gemini-2.5-flash';
-  const imageModel = 'gemini-2.5-flash-image';
+  const textModel = "gemini-2.5-flash";
+  const imageModel = "gemini-2.5-flash";
 
   try {
-    // Step 1: Refine style details (JSON)
-    const textPrompt = `You are 'Tailora', a fashion design assistant.
-
-**Your Task:**
-Refine a previous design based on user feedback and provide updated details.
+    const textPrompt = `You are 'Tailora', refining a previous fashion design.
 
 **Previous Design:**
-*   **Name:** ${previousSuggestion.styleName}
-*   **Description:** ${previousSuggestion.description}
+Name: ${previousSuggestion.styleName}
+Description: ${previousSuggestion.description}
 
-**User's Refinement Request:**
-"${refinementPrompt}"
+**User Feedback:** "${refinementPrompt}"
 
-**Contextual Inputs:**
-1.  **Fabric Image:** The fabric for the design.
-2.  **Customer Image:** The customer who will wear the design.
-3.  **Customer Details:**
-    *   Body Size: ${customerDetails.bodySize}
-    *   Body Nature/Type: ${customerDetails.bodyNature}
+Adjust the design accordingly while keeping its original essence.
+Ensure Tailora branding (logo-inspired typography + gold color #D4AF37) remains visible.
 
-**Instructions:**
-1.  **Branding Mandate:** Ensure the refined design still subtly incorporates elements inspired by the Tailora brand.
-    *   **Typography:** The design must feature an element inspired by the Tailora brand logo's elegant serif typography.
-    *   **Official Color:** The design must use the official Tailora brand color, a distinct gold (#D4AF37), as an accent.
-    *   **Mention:** Your description must explain how these brand elements are included.
-2.  **Modify the previous design's description** according to the user's request. Do not create a completely new design.
-3.  Update the style name to reflect the changes (e.g., "Embroidered [Original Name]").
-4.  Keep the "occasions" suitable for the modified design.
-
-**Output Format:** Your response MUST be a single, valid JSON object with the specified schema.`;
-
-    const fabricImagePart = { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } };
-    const customerImagePart = { inlineData: { data: customerImageBase64, mimeType: customerMimeType } };
-    const textPart = { text: textPrompt };
+Output valid JSON with:
+{
+  "styleName": "...",
+  "description": "...",
+  "occasions": "..."
+}`;
 
     const textResponse = await client.models.generateContent({
       model: textModel,
-      contents: { parts: [fabricImagePart, customerImagePart, textPart] },
+      contents: {
+        role: "user",
+        parts: [
+          { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
+          { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
+          { text: textPrompt },
+        ],
+      },
       config: {
-        responseMimeType: 'application/json',
+        responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            styleName: { type: Type.STRING, description: "The updated creative name for the refined style." },
-            description: { type: Type.STRING, description: "The updated detailed description of the refined garment, including the brand element. This will be used to generate a new sketch." },
-            occasions: { type: Type.STRING, description: "Suitable occasions for the refined style." },
+            styleName: { type: Type.STRING },
+            description: { type: Type.STRING },
+            occasions: { type: Type.STRING },
           },
           required: ["styleName", "description", "occasions"],
         },
       },
     });
 
-    let jsonText = textResponse.text.trim();
-    if (jsonText.startsWith('```json')) {
-      jsonText = jsonText.substring(7, jsonText.length - 3).trim();
-    } else if (jsonText.startsWith('```')) {
-      jsonText = jsonText.substring(3, jsonText.length - 3).trim();
-    }
-    const styleDetails = JSON.parse(jsonText);
+    let jsonText = textResponse.text?.trim() || "";
+    if (jsonText.startsWith("```json")) jsonText = jsonText.slice(7, -3).trim();
+    else if (jsonText.startsWith("```")) jsonText = jsonText.slice(3, -3).trim();
 
+    const styleDetails = JSON.parse(jsonText);
     if (!styleDetails?.description) {
-      console.error("Failed to generate valid refined style details from text model.", textResponse.text);
+      console.error("Invalid refined style details:", textResponse.text);
       return null;
     }
 
-    // Step 2: Generate new fashion sketch
-    const imagePrompt = `Generate a new professional fashion sketch of a model wearing the refined outfit described below.
-- The model should have a complexion similar to the one in the customer photo.
-- The model **must be wearing a stylish and elaborate West African style gele (headwrap)** made from the same fabric shown in the first input image. The gele style should be creative, complement the outfit, and **must not obscure important details of the garment like the neckline or shoulder design.**
-- The outfit in the sketch MUST be made from the fabric shown in the first input image. Replicate the fabric's pattern, texture, and colors accurately on the garment.
-- Pay special attention to the part of the description that mentions the integration of the **Tailora brand logo's typography and official gold color** and ensure it is visually represented in the sketch.
-
-**Refined Style Description:**
-${styleDetails.description}`;
-
-    const imageTextPart = { text: imagePrompt };
+    const imagePrompt = `Generate a professional sketch for this refined design:
+${styleDetails.description}
+Follow same image and branding rules as before.`;
 
     const imageResponse = await client.models.generateContent({
       model: imageModel,
-      contents: { parts: [fabricImagePart, customerImagePart, imageTextPart] },
-      config: {
-        responseModalities: [Modality.IMAGE],
+      contents: {
+        role: "user",
+        parts: [
+          { inlineData: { data: fabricImageBase64, mimeType: fabricMimeType } },
+          { inlineData: { data: customerImageBase64, mimeType: customerMimeType } },
+          { text: imagePrompt },
+        ],
       },
+      config: { responseModalities: [Modality.IMAGE] },
     });
 
-    let sketchUrl: string | null = null;
     const parts = imageResponse.candidates?.[0]?.content?.parts || [];
-    for (const part of parts) {
-      if (part.inlineData) {
-        const { mimeType, data } = part.inlineData;
-        sketchUrl = `data:${mimeType};base64,${data}`;
-        break;
-      }
-    }
+    const sketchPart = parts.find((p) => p.inlineData);
+    const sketchUrl = sketchPart
+      ? `data:${sketchPart.inlineData.mimeType};base64,${sketchPart.inlineData.data}`
+      : null;
 
     if (!sketchUrl) {
-      console.error("Failed to generate refined sketch from image model.");
+      console.error("Failed to generate refined sketch image.");
       return null;
     }
-    
-    return { ...styleDetails, sketchUrl };
 
-  } catch (error) {
-    console.error("Error calling Gemini API for refinement:", error);
-    throw error;
+    return { ...styleDetails, sketchUrl };
+  } catch (error: any) {
+    console.error("Error in refineStyle:", error);
+
+    if (error.message?.includes("429") || error.message?.includes("capacity"))
+      throw new Error("Tailora is taking a short creative break. Please try again soon.");
+    if (error.message?.includes("403") || error.message?.includes("API key"))
+      throw new Error("Invalid or missing Gemini API key. Please check your configuration.");
+
+    throw new Error("Something went wrong refining your design. Please retry shortly.");
   }
 };
