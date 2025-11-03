@@ -46,7 +46,28 @@ const StyleSuggestion = {
     refinementPrompt: '',
 };
 
-const INSPIRATION_OPTIONS = ['Modern', 'Traditional African (Aso-Oke, Adire)', 'Western Casual', 'Avant-Garde', 'Vintage 70s', 'Streetwear'];
+// Updated Options
+const BODY_NATURE_OPTIONS = [
+    'Pear-shaped (wider hips)', 
+    'Apple-shaped (wider torso)', 
+    'Hourglass (defined waist)', 
+    'Athletic/Rectangle (straight)', 
+    'Inverted Triangle (broad shoulders)',
+    'Tall',
+    'Petite',
+    'Other'
+];
+
+const INSPIRATION_OPTIONS = [
+    'Traditional African (Aso-Oke, Adire)', 
+    'Modern African (Wax Prints, Dashiki)',
+    'Middle Eastern (flowing abayas, geometric patterns)', 
+    'European (tailored suiting, minimalist silhouettes)', 
+    'Asian (kimono structure, silk textures)',
+    'Caribbean (vibrant colors, resort wear)',
+    'Streetwear',
+    'Vintage 70s'
+];
 
 
 // ==========================================================
@@ -118,13 +139,14 @@ const buildStylePrompt = (
     stylePreferences: typeof StylePreferencesType,
     refinementPrompt?: string
 ): string => {
-    const fabricDesc = "vibrant Nigerian Ankara print fabric in indigo, gold, and magenta"; 
+    // This part would ideally be dynamic based on the uploaded fabric image analysis (e.g., color, pattern)
+    const fabricDesc = "vibrant Nigerian Ankara print fabric in indigo, gold, and magenta, with a high-texture weave"; 
     const garment = stylePreferences.garmentType.toLowerCase();
     const inspirations = stylePreferences.inspirations.join(', ');
     const size = customerDetails.bodySize;
     const build = customerDetails.bodyNature;
     
-    let basePrompt = `Photorealistic image of a stunning custom-tailored **${garment}** designed for a **${size}, ${build}** body type. The garment is made entirely from a **${fabricDesc}** and is heavily inspired by **${inspirations}** styles. The style must be high-fashion, elegant, and modern, showing clear textile and tailoring details. The person is standing in a minimalist white studio background.`;
+    let basePrompt = `Photorealistic image of a stunning custom-tailored **${garment}** designed for a **${size}, ${build}** body shape. The garment is made entirely from a **${fabricDesc}** and is a unique fusion of **African** style with design elements from **${inspirations}** styles. The style must be high-fashion, elegant, and modern, showing clear textile, silhouette, and expert tailoring details. The person is standing in a minimalist white studio background.`;
 
     if (refinementPrompt) {
         basePrompt += ` **REFINEMENT**: Focus the design update on: "${refinementPrompt}".`;
@@ -149,7 +171,7 @@ const generateStyle = async (
 
     return {
         imageBase64: `data:image/jpeg;base64,${base64Image}`,
-        description: `A stunning fusion design: a tailored **${stylePreferences.garmentType.toLowerCase()}** inspired by the **${stylePreferences.inspirations.join(' & ')}** styles. It is designed for a customer with a ${customerDetails.bodySize} size and a ${customerDetails.bodyNature} build, maximizing the visual impact of the vibrant Nigerian fabric provided.`,
+        description: `A stunning **African fusion** design: a tailored **${stylePreferences.garmentType.toLowerCase()}** incorporating elements from **${stylePreferences.inspirations.join(' & ')}** styles. This piece is specifically designed to flatter a ${customerDetails.bodySize} size and ${customerDetails.bodyNature} build, maximizing the visual impact of the vibrant Nigerian fabric provided.`,
         materialsUsed: "Ankara fabric with silk lining and custom gold-finished zipper.",
         estimatedCost: "NGN 45,000 - NGN 75,000 (excluding fabric cost)",
     };
@@ -307,7 +329,6 @@ const ImageUploader = ({ onImageChange, imagePreviewUrl, promptText, subText, ca
  */
 const CustomerForm = ({ details, onDetailsChange }) => {
     const bodySizes = ['Small', 'Medium', 'Large', 'Extra Large'];
-    const bodyNatures = ['Curvy', 'Athletic', 'Slim', 'Plus Size'];
 
     return (
         <div className="space-y-4">
@@ -343,8 +364,8 @@ const CustomerForm = ({ details, onDetailsChange }) => {
                         className="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:text-white"
                         required
                     >
-                        <option value="">Select build</option>
-                        {bodyNatures.map(nature => <option key={nature} value={nature}>{nature}</option>)}
+                        <option value="">Select body shape</option>
+                        {BODY_NATURE_OPTIONS.map(nature => <option key={nature} value={nature}>{nature}</option>)}
                     </select>
                 </div>
             </div>
@@ -631,7 +652,7 @@ const App: React.FC = () => {
     // Main Style Generation Handler
     const handleSubmit = useCallback(async () => {
         if (!fabricImage || !customerImage || !customerDetails.bodySize || !customerDetails.bodyNature || stylePreferences.inspirations.length === 0) {
-            setError('Please fill out all fields: fabric image, customer photo, customer details, and at least one cultural inspiration.');
+            setError('Please fill out all fields: fabric image, customer photo, body size, body shape, and at least one cultural inspiration.');
             return;
         }
 
@@ -736,7 +757,7 @@ const App: React.FC = () => {
                                         onImageChange={handleCustomerImageChange} 
                                         imagePreviewUrl={customerImagePreview} 
                                         promptText="Upload customer photo"
-                                        subText="Helps with color matching"
+                                        subText="Helps with color matching & fit"
                                         capture="user"
                                     />
                                 </div>
