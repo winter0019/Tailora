@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Header } from './Header';
+import React from 'react';
+import { Header } from './components/Header';
 import { ImageUploader } from './components/ImageUploader';
 import { CustomerForm } from './components/CustomerForm';
 import { StylePreferences } from './components/StylePreferences';
