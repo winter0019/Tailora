@@ -2,13 +2,12 @@ import OpenAI from "openai";
 import { GoogleGenAI, Modality } from "@google/genai";
 import type { CustomerDetails, StylePreferences, StyleSuggestion } from "../types";
 
-
 // ---------- API KEY VALIDATION ----------
 const checkKeys = () => {
-  if (!process.env.OPENAI_API_KEY) console.warn("⚠️ OpenAI API key missing!");
-  if (!process.env.API_KEY) console.warn("⚠️ Google GenAI API key missing!");
-  if (!process.env.STABILITY_API_KEY) console.warn("⚠️ StabilityAI API key missing!");
-  if (!process.env.DEEP_AI_KEY) console.warn("⚠️ DeepAI API key missing!");
+  if (!import.meta.env.VITE_OPENAI_API_KEY) console.warn("⚠️ OpenAI API key missing!");
+  if (!import.meta.env.VITE_GEMINI_API_KEY) console.warn("⚠️ Google GenAI API key missing!");
+  if (!import.meta.env.VITE_STABILITY_API_KEY) console.warn("⚠️ StabilityAI API key missing!");
+  if (!import.meta.env.VITE_DEEP_AI_KEY) console.warn("⚠️ DeepAI API key missing!");
 };
 checkKeys();
 
@@ -16,8 +15,12 @@ checkKeys();
 
 async function generateWithOpenAI(prompt: string): Promise<string | null> {
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    const result = await openai.images.generate({ model: "dall-e-3", prompt, size: "1024x1024" });
+    const openai = new OpenAI({ apiKey: import.meta.env.VITE_OPENAI_API_KEY });
+    const result = await openai.images.generate({
+      model: "dall-e-3",
+      prompt,
+      size: "1024x1024",
+    });
     return result.data[0].url ?? null;
   } catch (err: any) {
     console.warn("⚠️ OpenAI failed:", err.message);
@@ -58,7 +61,7 @@ async function generateWithStabilityAI(prompt: string): Promise<string | null> {
     const res = await fetch("https://api.stability.ai/v2beta/stable-image/generate/sd3", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.STABILITY_API_KEY}`,
+        Authorization: `Bearer ${import.meta.env.VITE_STABILITY_API_KEY}`,
         Accept: "application/json",
         "Content-Type": "application/json",
       },
@@ -77,7 +80,7 @@ async function generateWithDeepAI(prompt: string): Promise<string | null> {
     const res = await fetch("https://api.deepai.org/api/text2img", {
       method: "POST",
       headers: {
-        "Api-Key": process.env.DEEP_AI_KEY!,
+        "Api-Key": import.meta.env.VITE_DEEP_AI_KEY!,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({ text: prompt }),
@@ -106,7 +109,12 @@ export const safeGenerateImage = async (
   if (openaiResult) return openaiResult;
 
   const geminiResult = await generateWithGemini(
-    client, prompt, fabricImageBase64, fabricMimeType, customerImageBase64, customerMimeType
+    client,
+    prompt,
+    fabricImageBase64,
+    fabricMimeType,
+    customerImageBase64,
+    customerMimeType
   );
   if (geminiResult) return geminiResult;
 
@@ -130,7 +138,7 @@ export const generateStyle = async (
   customerDetails: CustomerDetails,
   preferences: StylePreferences
 ): Promise<Partial<StyleSuggestion> | null> => {
-  const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const client = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
   const textModel = "gemini-2.5-flash";
 
   const prompt = `
@@ -145,14 +153,21 @@ Suggest an elegant, modern fashion style with colors, patterns, and cuts.`;
     contents: [{ role: "user", parts: [{ text: prompt }] }],
   });
 
-  const suggestionText = response.candidates?.[0]?.content?.parts?.[0]?.text
-    ?? "Elegant modern style inspired by Nigerian motifs.";
+  const suggestionText =
+    response.candidates?.[0]?.content?.parts?.[0]?.text ??
+    "Elegant modern style inspired by Nigerian motifs.";
 
   const imageBase64 = await safeGenerateImage(
-    client, fabricImageBase64, fabricMimeType, customerImageBase64, customerMimeType, suggestionText
+    client,
+    fabricImageBase64,
+    fabricMimeType,
+    customerImageBase64,
+    customerMimeType,
+    suggestionText
   );
 
-  if (!imageBase64) throw new Error("Tailora is taking a short creative break... please try again soon.");
+  if (!imageBase64)
+    throw new Error("Tailora is taking a short creative break... please try again soon.");
 
   return { text: suggestionText, image: imageBase64 };
 };
@@ -168,7 +183,7 @@ export const refineStyle = async (
   previousSuggestion: StyleSuggestion,
   refinementPrompt: string
 ): Promise<Partial<StyleSuggestion> | null> => {
-  const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const client = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
   const textModel = "gemini-2.5-flash";
 
   const prompt = `
@@ -182,14 +197,21 @@ Generate improved, elegant, and consistent style.`;
     contents: [{ role: "user", parts: [{ text: prompt }] }],
   });
 
-  const refinedText = response.candidates?.[0]?.content?.parts?.[0]?.text
-    ?? "Updated elegant version of the design.";
+  const refinedText =
+    response.candidates?.[0]?.content?.parts?.[0]?.text ??
+    "Updated elegant version of the design.";
 
   const imageBase64 = await safeGenerateImage(
-    client, fabricImageBase64, fabricMimeType, customerImageBase64, customerMimeType, refinedText
+    client,
+    fabricImageBase64,
+    fabricMimeType,
+    customerImageBase64,
+    customerMimeType,
+    refinedText
   );
 
-  if (!imageBase64) throw new Error("Tailora is taking a short creative break... please try again soon.");
+  if (!imageBase64)
+    throw new Error("Tailora is taking a short creative break... please try again soon.");
 
   return { text: refinedText, image: imageBase64 };
 };
