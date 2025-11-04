@@ -2,29 +2,48 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎨%3C/text%3E%3C/svg%3E">
+    <link 
+      rel="icon" 
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎨%3C/text%3E%3C/svg%3E"
+    >
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tailora</title>
     <link rel="stylesheet" href="/output.css">
+
     <style>
       body {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0"
-  }
-}
-</script>
-</head>
+
+    <!-- React + Google GenAI via CDN -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://aistudiocdn.com/react@^19.2.0",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0"
+      }
+    }
+    </script>
+  </head>
+
   <body class="bg-stone-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
     <div id="root"></div>
+
+    <!-- ✅ Inject environment variables from Render -->
+    <script>
+      window.ENV = {
+        VITE_OPENAI_API_KEY: "{{OPENAI_API_KEY}}",
+        VITE_GEMINI_API_KEY: "{{API_KEY}}",
+        VITE_STABILITY_API_KEY: "{{STABILITY_API_KEY}}",
+        VITE_DEEP_AI_KEY: "{{DEEP_AI_KEY}}"
+      };
+    </script>
+
+    <!-- Your main app entry -->
     <script type="module" src="/main.js"></script>
   </body>
 </html>
