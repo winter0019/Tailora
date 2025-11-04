@@ -10,12 +10,17 @@
   },
   "dependencies": {
     "@google/genai": "^1.28.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "axios": "^1.13.1",
+    "deepai": "^1.0.23",
+    "dotenv": "^17.2.3",
     "esbuild": "^0.23.0",
+    "form-data": "^4.0.4",
+    "openai": "^6.8.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "serve": "^14.2.3",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0"
+    "serve": "^14.2.3"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
