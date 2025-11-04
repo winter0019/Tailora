@@ -1,8 +1,7 @@
 import OpenAI from "openai";
 import { GoogleGenAI, Modality } from "@google/genai";
 import type { CustomerDetails, StylePreferences, StyleSuggestion } from "../types";
-import dotenv from "dotenv";
-dotenv.config();
+
 
 // ---------- API KEY VALIDATION ----------
 const checkKeys = () => {
