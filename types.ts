@@ -14,4 +14,5 @@ export interface StyleSuggestion {
 export interface StylePreferences {
     inspirations: string[];
     garmentType: string;
+    embellishment: string;
 }

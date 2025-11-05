@@ -17,9 +17,16 @@ const INSPIRATIONS = [
 const GARMENT_TYPES = [
     "Any",
     "Long Gown",
-    "Short Dress",
+    "Short Gown",
+    "Skirt",
     "Skirt and Top",
     "Trousers and Blouse"
+];
+
+const EMBELLISHMENT_TYPES = [
+    "Normal",
+    "Embroidery",
+    "Patch",
 ];
 
 export const StylePreferences: React.FC<StylePreferencesProps> = ({ preferences, onPreferencesChange }) => {
@@ -34,8 +41,12 @@ export const StylePreferences: React.FC<StylePreferencesProps> = ({ preferences,
     onPreferencesChange({ ...preferences, garmentType: e.target.value });
   };
 
+  const handleEmbellishmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onPreferencesChange({ ...preferences, embellishment: e.target.value });
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div>
         <h3 className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
           Cultural Inspirations (Select at least one)
@@ -70,6 +81,26 @@ export const StylePreferences: React.FC<StylePreferencesProps> = ({ preferences,
                 value={type}
                 checked={preferences.garmentType === type}
                 onChange={handleGarmentTypeChange}
+                className="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
+              />
+               <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{type}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h3 className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
+          Embellishment Style
+        </h3>
+        <div className="grid grid-cols-3 gap-4">
+          {EMBELLISHMENT_TYPES.map((type) => (
+             <label key={type} className="flex items-center space-x-3 p-3 bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-md cursor-pointer hover:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/50 has-[:checked]:border-indigo-500 transition-colors">
+              <input
+                type="radio"
+                name="embellishmentType"
+                value={type}
+                checked={preferences.embellishment === type}
+                onChange={handleEmbellishmentChange}
                 className="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
               />
                <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{type}</span>

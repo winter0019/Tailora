@@ -2,66 +2,29 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
-    <!-- Favicon -->
-    <link 
-      rel="icon" 
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎨%3C/text%3E%3C/svg%3E"
-    >
-
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎨%3C/text%3E%3C/svg%3E">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tailora</title>
-
-    <!-- Tailwind Output -->
     <link rel="stylesheet" href="/output.css">
-
     <style>
       body {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        margin: 0;
-        padding: 0;
-        min-height: 100vh;
-        font-family: system-ui, sans-serif;
       }
     </style>
-
-    <!-- ✅ React + Google GenAI (CDN versions for browser use) -->
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://aistudiocdn.com/react@^19.2.0",
-        "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
-        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-        "react/": "https://aistudiocdn.com/react@^19.2.0/",
-        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0"
-      }
-    }
-    </script>
-  </head>
-
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0"
+  }
+}
+</script>
+</head>
   <body class="bg-stone-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
     <div id="root"></div>
-
-    <!-- ✅ Inject environment variables (Render will replace these placeholders automatically) -->
-    <script>
-      window.ENV = {
-        VITE_OPENAI_API_KEY: "{{OPENAI_API_KEY}}",
-        VITE_GEMINI_API_KEY: "{{API_KEY}}",
-        VITE_STABILITY_API_KEY: "{{STABILITY_API_KEY}}",
-        VITE_DEEP_AI_KEY: "{{DEEP_AI_KEY}}"
-      };
-    </script>
-
-    <!-- ✅ Main entry file -->
     <script type="module" src="/main.js"></script>
-
-    <!-- ✅ Optional: Fallback message if JS fails -->
-    <noscript>
-      <div style="padding: 2rem; text-align: center; color: #444;">
-        <h2>Tailora requires JavaScript to run properly.</h2>
-        <p>Please enable JavaScript and reload the page.</p>
-      </div>
-    </noscript>
   </body>
 </html>

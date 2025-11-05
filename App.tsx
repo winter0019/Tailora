@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const [stylePreferences, setStylePreferences] = useState<StylePreferencesType>({
     inspirations: [],
     garmentType: 'Any',
+    embellishment: 'Normal',
   });
   const [suggestions, setSuggestions] = useState<StyleSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
