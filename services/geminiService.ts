@@ -2,11 +2,11 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 import type { CustomerDetails, StyleSuggestion, StylePreferences } from '../types';
 
 function getAiClient(): GoogleGenAI {
-  // The API key is expected to be available as a pre-configured environment variable.
+  // The API key is injected at build time via esbuild's `define` feature.
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
     // This error will be caught by the UI and displayed to the user.
-    throw new Error("API key not found. Please ensure it is configured in the environment.");
+    throw new Error("API_KEY is not configured. Please add the environment variable to your deployment to use the app.");
   }
   return new GoogleGenAI({ apiKey });
 }
