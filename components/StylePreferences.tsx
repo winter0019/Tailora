@@ -25,8 +25,10 @@ const GARMENT_TYPES = [
 
 const EMBELLISHMENT_TYPES = [
     "Normal",
-    "Embroidery",
-    "Patch",
+    "Beading",
+    "Sequins",
+    "Threadwork",
+    "Lace Appliqué"
 ];
 
 export const StylePreferences: React.FC<StylePreferencesProps> = ({ preferences, onPreferencesChange }) => {
@@ -92,12 +94,12 @@ export const StylePreferences: React.FC<StylePreferencesProps> = ({ preferences,
         <h3 className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
           Embellishment Style
         </h3>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {EMBELLISHMENT_TYPES.map((type) => (
              <label key={type} className="flex items-center space-x-3 p-3 bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-md cursor-pointer hover:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/50 has-[:checked]:border-indigo-500 transition-colors">
               <input
                 type="radio"
-                name="embellishmentType"
+                name="embellishment"
                 value={type}
                 checked={preferences.embellishment === type}
                 onChange={handleEmbellishmentChange}

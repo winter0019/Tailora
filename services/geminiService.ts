@@ -266,4 +266,11 @@ Follow same image and branding rules as before.`;
     return { ...styleDetails, sketchUrl };
 
   } catch (error: any) {
-    console.error("Error
+    console.error("Error in refineStyle:", error);
+    if (error.message?.includes("quota") || error.message?.includes("RESOURCE_EXHAUSTED"))
+      throw new Error("Tailora is taking a short creative break. Please try again soon.");
+    if (error.message?.includes("API key not valid"))
+      throw new Error("Invalid or missing Gemini API key. Please check your configuration.");
+    throw new Error("Something went wrong refining your design. Please retry shortly.");
+  }
+};
