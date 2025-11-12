@@ -172,6 +172,8 @@ Guidelines:
 
   } catch (error: any) {
     console.error("Error in generateStyle:", error);
+    if (error.message?.includes("model is overloaded") || error.message?.includes("UNAVAILABLE"))
+      throw new Error("Our creative AI is currently in high demand. Please try again in a moment.");
     if (error.message?.includes("quota") || error.message?.includes("RESOURCE_EXHAUSTED"))
       throw new Error("Tailora is taking a short creative break. Please try again soon.");
     if (error.message?.includes("API key not valid"))
@@ -267,6 +269,8 @@ Follow same image and branding rules as before.`;
 
   } catch (error: any) {
     console.error("Error in refineStyle:", error);
+    if (error.message?.includes("model is overloaded") || error.message?.includes("UNAVAILABLE"))
+      throw new Error("Our creative AI is currently in high demand. Please try again in a moment.");
     if (error.message?.includes("quota") || error.message?.includes("RESOURCE_EXHAUSTED"))
       throw new Error("Tailora is taking a short creative break. Please try again soon.");
     if (error.message?.includes("API key not valid"))
